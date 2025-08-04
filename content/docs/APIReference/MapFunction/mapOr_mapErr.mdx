@@ -1,0 +1,224 @@
+---
+title: .mapErr() and .mapOr()
+description: Transform the error of a Result with `.mapErr()` and provide a fallback for an Option using `.mapOr()`.
+---
+
+# Handling Errors and Defaults
+
+In functional programming, sometimes you're more interested in what happens when things go **wrong** or **don’t exist**. That’s where `.mapErr()` and `.mapOr()` come into play, giving you clean, expressive ways to transform errors and fallback values.
+
+---
+
+## Transforming Errors with `.mapErr()`
+
+When working with `Result`, `.mapErr()` allows you to handle the **error case** (`Err`) specifically. It does nothing if the result is `Ok`.
+
+### How it works:
+
+- If the result is `Result.Err(error)`:
+  - Applies your function to the error
+  - Returns `Result.Err(mappedError)`
+- If the result is `Result.Ok(value)`:
+  - Leaves it untouched
+
+This is useful when:
+
+- You want to format error messages
+- Convert internal errors to user-facing messages
+- Add metadata to errors for logging or debugging
+
+### Example
+
+```ts
+import { Result, matchRes } from '@carbonteq/fp';
+async function fetchUserData(): Promise<Result<string, Error>> {
+ try {
+   const data = await Promise.reject(new Error("Network Issue"));
+   return Result.Ok(data);
+ } catch (err) {
+   const error = err instanceof Error ? err : new Error(String(err));
+   return Result.Err(error);
+ }
+}
+const res = await fetchUserData();
+const transformed = res.mapErr(
+ (err) => new Error(`${err.message}: Use CarbonTeq Data!!!`)
+);
+matchRes(transformed, {
+ Ok(v) {
+   console.log(v);
+ },
+ Err(e) {
+   console.error(e.message);
+ },
+});
+```
+
+---
+
+## Providing Fallbacks with `.mapOr()`
+
+`Option.mapOr()` gives you a default when a value is missing (`None`) and a transformation when it's present (`Some`).
+
+### How it works:
+
+- If the `Option` is `Some(value)`:
+  - Applies your function and returns the result
+- If the `Option` is `None`:
+  - Returns your provided fallback
+
+This is especially useful when:
+
+- You want to safely transform values if they exist
+- But also have a sensible default if they don’t
+
+### Example
+
+```ts
+import { Option } from "@carbonteq/fp";
+function getUserNickname(userId: string): Option<string> {
+ const nicknames : Record<string, string> = { "user123": "Ace" }; 
+ const nickname = nicknames[userId];
+ return nickname ? Option.Some(nickname) : Option.None;
+}
+const greeting = getUserNickname("unknownUser")
+ .mapOr("Guest", (nickname) => `Welcome, ${nickname}!`)
+ .safeUnwrap();
+console.log(greeting)
+```
+
+---
+
+## Without and With Examples
+
+Here’s a side-by-side comparison of a scenario written imperatively vs using `.mapErr()` or `.mapOr()`.
+
+<GoodBadCode
+  goodDescription="Using error and fallback handling provides:"
+  goodPoints={[
+    "Consistent error transformation with `mapErr()`",
+    "Default values without unwrapping via `mapOr()`"
+  ]}
+  badDescription="Manual error handling leads to:"
+  badPoints={[
+    "Explicit conditional checks for every case",
+    "Unsafe unwrapping operations"
+  ]}
+  goodCode={`import { Result, Option } from "@carbonteq/fp";
+
+// Error transformation
+const cleanError = Result.Err(new Error("DB Error"))
+  .mapErr(err => new Error("Clean: " + err.message));
+
+// Fallback value  
+const username = Option.None
+  .mapOr("guest", user => user.toUpperCase());`}
+  badCode={`import { Result, Option } from "@carbonteq/fp";
+
+// Manual error handling
+let cleanError;
+if (result.isErr()) {
+  const err = result.unwrapErr();
+  cleanError = new Error("Clean: " + err.message);
+}
+
+// Manual fallback
+let username = "guest";
+if (user.isSome()) {
+  username = user.unwrap().toUpperCase();
+}`}
+  showViewButton={true}
+/>
+
+
+---
+## Exercise: Improve Error and Fallback Handling
+
+You’re given two functions. One returns a `Result`, and another returns an `Option`.
+
+```ts
+async function fetchPosts(): Promise<Result<string[], Error>> {
+  return Result.Err(new Error("Timeout"));
+}
+
+const postsRes = await fetchPosts();
+let handledPosts;
+
+if (postsRes.isErr()) {
+  const rawError = postsRes.unwrapErr();
+  handledPosts = [\`⚠ \${rawError.message}\`];
+} else {
+  handledPosts = postsRes.unwrap();
+}
+
+function getSessionUser(): Option<string> {
+  return Option.None;
+}
+
+const user = getSessionUser();
+const displayName = user.isSome() ? user.unwrap() : "Anonymous";
+
+console.log(handledPosts);
+console.log(displayName);
+```
+Try rewriting them using `.mapErr()` and `.mapOr()` for better clarity and expressiveness.
+
+<SandPack
+  code={`async function fetchPosts(): Promise<Result<string[], Error>> {
+  return Result.Err(new Error("Timeout"));
+}
+
+const postsRes = await fetchPosts();
+let handledPosts;
+
+if (postsRes.isErr()) {
+  const rawError = postsRes.unwrapErr();
+  handledPosts = [\`⚠ \${rawError.message}\`];
+} else {
+  handledPosts = postsRes.unwrap();
+}
+
+function getSessionUser(): Option<string> {
+  return Option.None;
+}
+
+const user = getSessionUser();
+const displayName = user.isSome() ? user.unwrap() : "Anonymous";
+
+console.log(handledPosts);
+console.log(displayName);`}
+/>
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result } from "@carbonteq/fp"
+import { Option } from "@carbonteq/fp"
+
+async function fetchPosts(): Promise<Result<string[], Error>> {
+  return Result.Err(new Error("Timeout"));
+}
+
+const handledPosts = (await fetchPosts())
+  .mapErr((err) => new Error(\`⚠ \${err.message}\`))
+  .match({
+    Ok: (posts) => posts,
+    Err: (e) => [e.message],
+  });
+
+function getSessionUser(): Option<string> {
+  return Option.None;
+}
+
+const displayName = getSessionUser()
+  .mapOr("Anonymous", (name) => name);
+
+console.log(handledPosts);
+console.log(displayName);`}
+/>
+
+
+
+
+---
+
+Whether you're transforming errors or safely mapping with fallbacks, `.mapErr()` and `.mapOr()` help make your functional code more resilient, expressive, and readable.

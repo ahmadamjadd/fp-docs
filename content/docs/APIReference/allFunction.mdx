@@ -1,0 +1,210 @@
+---
+title: .all()
+description: Combine multiple Result instances into a single Result using .all().
+---
+
+# Aggregating Results
+
+In functional programming, it's common to perform multiple operations that can each succeed or fail independently. If you want to combine the outputs of several `Result` values into a single `Result`, the `.all()` method is your go-to tool. It ensures that you only move forward if **all** the computations succeed; otherwise, it collects all the errors.
+
+---
+
+## What .all() Does
+
+`.all()` takes multiple `Result` values and combines them into one. If every input is `Ok`, it returns an `Ok` with an array of all the successful values. This is perfect for scenarios where you depend on several separate tasks completing without error, and only then want to proceed with their combined output.
+
+However, if **any** of the inputs is an `Err`, the entire result becomes an `Err`. And instead of stopping at the first error, `.all()` will continue evaluating all values and return an array of all errors that occurred. This makes debugging and error reporting much easier, as you can see everything that went wrong in one go.
+
+---
+
+## Why It's Useful
+
+Imagine calling several APIs, reading different files, or validating multiple form inputs. Each task might fail for its own reasons. With `.all()`, you can gather those attempts into one clear result. If everything is successful, you get an `Ok` with all the data. If not, you get a list of all the reasons why things failed.
+
+This declarative approach avoids nested conditionals and promotes a cleaner, more expressive style when working with multiple independent computations.
+
+---
+
+## Example: Without and With .all()
+
+Let’s look at how you might handle multiple results manually versus how clean and simple it becomes with `.all()`.
+
+<GoodBadCode
+  goodDescription="Using `Result.all()` provides:"
+  goodPoints={[
+    "Parallel execution of multiple operations",
+    "Automatic aggregation of all errors"
+  ]}
+  badDescription="Manual execution requires:"
+  badPoints={[
+    "Nested conditional checks for each operation",
+    "Manual error handling and propagation"
+  ]}
+  goodCode={`import { Result } from "@carbonteq/fp";
+
+// Simulated API calls
+const fetchUser = (): Result<string, string> => 
+  Result.Ok("User123");
+const fetchOrders = (): Result<string[], string> => 
+  Result.Err("Orders service down");
+const fetchProfile = (): Result<object, string> => 
+  Result.Ok({ name: "John" });
+
+// Parallel execution
+const combinedData = Result.all(
+  fetchUser(),
+  fetchOrders(),
+  fetchProfile()
+);
+
+combinedData.match({
+  Ok: ([user, orders, profile]) => console.log("Success:", { user, orders, profile }),
+  Err: errors => console.log("Errors:", errors)
+});`}
+  badCode={`import { Result } from "@carbonteq/fp";
+
+// Simulated API calls (same as above)
+const fetchUser = (): Result<string, string> => /*...*/;
+const fetchOrders = (): Result<string[], string> => /*...*/;
+const fetchProfile = (): Result<object, string> => /*...*/;
+
+// Sequential execution
+let combinedData;
+const user = fetchUser();
+if (user.isErr()) {
+  combinedData = Result.Err([user.unwrapErr()]);
+} else {
+  const orders = fetchOrders();
+  if (orders.isErr()) {
+    combinedData = Result.Err([orders.unwrapErr()]);
+  } else {
+    const profile = fetchProfile();
+    if (profile.isErr()) {
+      combinedData = Result.Err([profile.unwrapErr()]);
+    } else {
+      combinedData = Result.Ok([
+        user.unwrap(),
+        orders.unwrap(),
+        profile.unwrap()
+      ]);
+    }
+  }
+}`}
+  showViewButton={true}
+/>
+
+---
+
+## Exercise: Refactor with .all()
+
+You’re given three functions, each returning a `Result`. The current logic handles them one-by-one and stops on the first failure.  
+
+```ts
+import { Result } from "@carbonteq/fp";
+
+function fetchUser(): Result<string, string> {
+  return Result.Ok("User Data");
+}
+
+function fetchOrders(): Result<string, string> {
+  return Result.Err("Orders API failed");
+}
+
+function fetchNotifications(): Result<string, string> {
+  return Result.Err("Notifications API failed");
+}
+
+const user = fetchUser();
+if (user.isErr()) {
+  console.log("User fetch failed:", user.unwrapErr());
+} else {
+  const orders = fetchOrders();
+  if (orders.isErr()) {
+    console.log("Orders fetch failed:", orders.unwrapErr());
+  } else {
+    const notifications = fetchNotifications();
+    if (notifications.isErr()) {
+      console.log("Notifications fetch failed:", notifications.unwrapErr());
+    } else {
+      console.log("All succeeded:", [
+        user.safeUnwrap(),
+        orders.safeUnwrap(),
+        notifications.safeUnwrap(),
+      ]);
+    }
+  }
+}
+```
+
+Your task is to rewrite the code using `.all()` so that you can collect and evaluate all the results together, and access all error messages if any of them fail.
+
+<SandPack
+  code={`import { Result } from "@carbonteq/fp";
+
+function fetchUser(): Result<string, string> {
+  return Result.Ok("User Data");
+}
+
+function fetchOrders(): Result<string, string> {
+  return Result.Err("Orders API failed");
+}
+
+function fetchNotifications(): Result<string, string> {
+  return Result.Err("Notifications API failed");
+}
+
+const user = fetchUser();
+if (user.isErr()) {
+  console.log("User fetch failed:", user.unwrapErr());
+} else {
+  const orders = fetchOrders();
+  if (orders.isErr()) {
+    console.log("Orders fetch failed:", orders.unwrapErr());
+  } else {
+    const notifications = fetchNotifications();
+    if (notifications.isErr()) {
+      console.log("Notifications fetch failed:", notifications.unwrapErr());
+    } else {
+      console.log("All succeeded:", [
+        user.safeUnwrap(),
+        orders.safeUnwrap(),
+        notifications.safeUnwrap(),
+      ]);
+    }
+  }
+}`}
+/>
+
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result } from "@carbonteq/fp";
+
+function fetchUser(): Result<string, string> {
+  return Result.Ok("User Data");
+}
+
+function fetchOrders(): Result<string, string> {
+  return Result.Err("Orders API failed");
+}
+
+function fetchNotifications(): Result<string, string> {
+  return Result.Err("Notifications API failed");
+}
+
+const combined = Result.all(
+  fetchUser(),
+  fetchOrders(),
+  fetchNotifications()
+);
+
+combined.isOk()
+  ? console.log("All API calls succeeded:", combined.safeUnwrap())
+  : console.log("Some API calls failed:", combined.unwrapErr());`}
+/>
+
+
+
+---
+
+`.all()` is exclusive to `Result`, and is a powerful way to aggregate success or failure from many operations. Use it when you want to enforce that **everything must succeed**, and get full visibility when something doesn’t.

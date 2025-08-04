@@ -1,0 +1,49 @@
+---
+title: .safeUnwrap()
+description: Extract the value from Result or Option without throwing errors.
+---
+
+The `.safeUnwrap()` method provides a safe way to extract a value from a `Result` or an `Option` without risking a runtime exception.
+
+## Result.safeUnwrap(): Extract or Get Null
+
+When used on a `Result`, `.safeUnwrap()` retrieves the value from an `Ok`, but if the result is an `Err`, it simply returns `null` instead of throwing. This allows you to continue your flow gracefully even when an error occurs, avoiding a crash and making conditional logic simpler.
+
+This method is particularly helpful when you're not interested in handling the exact error but still want to check whether a value exists or not.
+
+### Example
+
+```ts
+import {Result } from '@carbonteq/fp';
+async function validateUsername(username: string): Promise<Result<string, Error>> {
+ return username.length >= 5
+   ? Result.Ok(username)
+   : Result.Err(new Error("Username must be at least 5 characters long."));
+}
+const res = await validateUsername("John"); // Invalid (too short)
+res.isOk()
+ ? console.log(res.safeUnwrap())
+ : console.log(res.unwrapErr());
+ ```
+
+## Option.safeUnwrap(): Get Some or Null
+
+For `Option`, `.safeUnwrap()` returns the value if it exists inside a `Some`. If the Option is `None`, it returns `null`. This avoids the unsafe behavior of `.unwrap()` and lets you handle missing values using standard null checks instead of exceptions.
+
+This is the preferred method when working in contexts where `null` is easier to work with, such as optional form values or fallbacks in UI rendering.
+
+### Example
+
+```ts
+import { Option } from "@carbonteq/fp";
+function getUserName(userId: string): Option<string> {
+ // Simulating lookup
+ const database : Record<string, string> = { "user123": "Ahmad" };
+ const name = database[userId];
+
+
+ return name ? Option.Some(name) : Option.None;
+}
+const userName = getUserName("user12").safeUnwrap();
+console.log(`User's name is ${userName}`);
+```

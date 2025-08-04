@@ -1,0 +1,418 @@
+---
+title: Build Your First FP Pipeline
+description: Interactive coding tutorial creating a real-world order processing system with Carbonteq FP. Learn validation chaining, error accumulation, and pattern matching in practice.
+---
+
+<Scrollycoding>
+
+## !!steps Handling User Orders Synchronously
+
+In this tutorial, we'll build an order processing pipeline using Carbonteq's fp utilities. We'll demonstrate how to handle validation, transformations, and error handling in a synchronous workflow using `Result` and `Option`.
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+import { Result } from "@carbonteq/fp";
+
+interface Order {
+  id: string;
+  items: number;
+  total: number;
+}
+```
+## !!steps Defining Validation Functions
+
+First, we create validation functions that return Result types. These will check:
+
+-Valid order ID format
+
+-Positive item count
+
+-Minimum order amount
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+
+import { Result } from "@carbonteq/fp";
+
+
+interface Order {
+  id: string;
+  items: number;
+  total: number;
+}
+
+// Validate order ID format
+function validateId(order: Order): Result<Order, string> {
+  return order.id.startsWith("ORD-") 
+    ? Result.Ok(order) 
+    : Result.Err("Invalid order ID format");
+}
+
+// Validate item count
+function validateItems(order: Order): Result<Order, string> {
+  return order.items > 0 
+    ? Result.Ok(order) 
+    : Result.Err("Item count must be positive");
+}
+
+// Validate minimum order amount
+function validateAmount(order: Order): Result<Order, string> {
+  return order.total >= 10 
+    ? Result.Ok(order) 
+    : Result.Err("Minimum order amount is $10");
+}
+```
+
+## !!steps Creating Processing Functions
+
+Next, we'll add processing functions that transform valid orders:
+
+-Apply discount to qualified orders
+
+-Generate order confirmation
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+
+// !collapse(1:6) collapsed
+// ...previous validate order ID function
+function validateId(order: Order): Result<Order, string> {
+  return order.id.startsWith("ORD-") 
+    ? Result.Ok(order) 
+    : Result.Err("Invalid order ID format");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateItems function
+function validateItems(order: Order): Result<Order, string> {
+  return order.items > 0 
+    ? Result.Ok(order) 
+    : Result.Err("Item count must be positive");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateAmount function
+function validateAmount(order: Order): Result<Order, string> {
+  return order.total >= 10 
+    ? Result.Ok(order) 
+    : Result.Err("Minimum order amount is $10");
+}
+
+// Apply 10% discount for orders over $50
+function applyDiscount(order: Order): Result<Order, string> {
+  if (order.total > 50) {
+    return Result.Ok({
+      ...order,
+      total: order.total * 0.9
+    });
+  }
+  return Result.Ok(order);
+}
+
+// Generate order confirmation
+function generateConfirmation(order: Order): Result<string, string> {
+  const confirmation = `
+    Order ID: ${order.id}
+    Items: ${order.items}
+    Total: $${order.total.toFixed(2)}
+    Status: Processed
+  `;
+  return Result.Ok(confirmation);
+}
+```
+## !!steps Building the Processing Pipeline
+
+Now we'll chain our operations using flatMap and validate:
+
+-Validate input
+
+-Apply discount
+
+-Generate confirmation
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+// !collapse(1:6) collapsed
+// ...previous validate order ID function
+function validateId(order: Order): Result<Order, string> {
+  return order.id.startsWith("ORD-") 
+    ? Result.Ok(order) 
+    : Result.Err("Invalid order ID format");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateItems function
+function validateItems(order: Order): Result<Order, string> {
+  return order.items > 0 
+    ? Result.Ok(order) 
+    : Result.Err("Item count must be positive");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateAmount function
+function validateAmount(order: Order): Result<Order, string> {
+  return order.total >= 10 
+    ? Result.Ok(order) 
+    : Result.Err("Minimum order amount is $10");
+}
+
+// !collapse(1:10) collapsed
+// ...previous applyDiscount function
+function applyDiscount(order: Order): Result<Order, string> {
+  if (order.total > 50) {
+    return Result.Ok({
+      ...order,
+      total: order.total * 0.9
+    });
+  }
+  return Result.Ok(order);
+}
+
+// !collapse(1:10) collapsed
+// ...previous generateConfirmation function
+function generateConfirmation(order: Order): Result<string, string> {
+  const confirmation = `
+    Order ID: ${order.id}
+    Items: ${order.items}
+    Total: $${order.total.toFixed(2)}
+    Status: Processed
+  `;
+  return Result.Ok(confirmation);
+}
+
+// Main processing pipeline
+function processOrder(order: Order): Result<string, string[]> {
+  return Result.Ok(order)
+    .validate([
+      validateId,
+      validateItems,
+      validateAmount
+    ])
+    .flatMap(applyDiscount)
+    .flatMap(generateConfirmation)
+    .mapErr(errors => Array.isArray(errors) 
+      ? errors 
+      : [errors]
+    );
+}
+```
+
+## !!steps Handling Results with Pattern Matching
+
+Finally, we'll use pattern matching to handle both success and error cases:
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+// !collapse(1:6) collapsed
+// ...previous validate order ID function
+function validateId(order: Order): Result<Order, string> {
+  return order.id.startsWith("ORD-") 
+    ? Result.Ok(order) 
+    : Result.Err("Invalid order ID format");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateItems function
+function validateItems(order: Order): Result<Order, string> {
+  return order.items > 0 
+    ? Result.Ok(order) 
+    : Result.Err("Item count must be positive");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateAmount function
+function validateAmount(order: Order): Result<Order, string> {
+  return order.total >= 10 
+    ? Result.Ok(order) 
+    : Result.Err("Minimum order amount is $10");
+}
+
+// !collapse(1:10) collapsed
+// ...previous applyDiscount function
+function applyDiscount(order: Order): Result<Order, string> {
+  if (order.total > 50) {
+    return Result.Ok({
+      ...order,
+      total: order.total * 0.9
+    });
+  }
+  return Result.Ok(order);
+}
+
+// !collapse(1:10) collapsed
+// ...previous generateConfirmation function
+function generateConfirmation(order: Order): Result<string, string> {
+  const confirmation = `
+    Order ID: ${order.id}
+    Items: ${order.items}
+    Total: $${order.total.toFixed(2)}
+    Status: Processed
+  `;
+  return Result.Ok(confirmation);
+}
+
+// !collapse(1:15) collapsed
+// ...previous Main Processing Pipeline
+function processOrder(order: Order): Result<string, string[]> {
+  return Result.Ok(order)
+    .validate([
+      validateId,
+      validateItems,
+      validateAmount
+    ])
+    .flatMap(applyDiscount)
+    .flatMap(generateConfirmation)
+    .mapErr(errors => Array.isArray(errors) 
+      ? errors 
+      : [errors]
+    );
+}
+
+// Test order data
+const testOrder: Order = {
+  id: "ORD-12345",
+  items: 3,
+  total: 75.00
+};
+
+// Process and handle results
+const result = processOrder(testOrder);
+
+Result.match(result, {
+  Ok: (confirmation) => {
+    console.log("✅ Order processed successfully!");
+    console.log(confirmation);
+  },
+  Err: (errors) => {
+    console.error("❌ Order processing failed:");
+    errors.forEach(err => console.error(`- ${err}`));
+  }
+});
+
+/* Output:
+✅ Order processed successfully!
+    Order ID: ORD-12345
+    Items: 3
+    Total: $67.50
+    Status: Processed
+*/
+```
+## !!steps Handling Error Cases
+
+Let's test an invalid order to see error handling in action:
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+// !collapse(1:6) collapsed
+// ...previous validate order ID function
+function validateId(order: Order): Result<Order, string> {
+  return order.id.startsWith("ORD-") 
+    ? Result.Ok(order) 
+    : Result.Err("Invalid order ID format");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateItems function
+function validateItems(order: Order): Result<Order, string> {
+  return order.items > 0 
+    ? Result.Ok(order) 
+    : Result.Err("Item count must be positive");
+}
+
+// !collapse(1:6) collapsed
+// ...previous validateAmount function
+function validateAmount(order: Order): Result<Order, string> {
+  return order.total >= 10 
+    ? Result.Ok(order) 
+    : Result.Err("Minimum order amount is $10");
+}
+
+// !collapse(1:10) collapsed
+// ...previous applyDiscount function
+function applyDiscount(order: Order): Result<Order, string> {
+  if (order.total > 50) {
+    return Result.Ok({
+      ...order,
+      total: order.total * 0.9
+    });
+  }
+  return Result.Ok(order);
+}
+
+// !collapse(1:10) collapsed
+// ...previous generateConfirmation function
+function generateConfirmation(order: Order): Result<string, string> {
+  const confirmation = `
+    Order ID: ${order.id}
+    Items: ${order.items}
+    Total: $${order.total.toFixed(2)}
+    Status: Processed
+  `;
+  return Result.Ok(confirmation);
+}
+
+// !collapse(1:15) collapsed
+// ...previous Main Processing Pipeline
+function processOrder(order: Order): Result<string, string[]> {
+  return Result.Ok(order)
+    .validate([
+      validateId,
+      validateItems,
+      validateAmount
+    ])
+    .flatMap(applyDiscount)
+    .flatMap(generateConfirmation)
+    .mapErr(errors => Array.isArray(errors) 
+      ? errors 
+      : [errors]
+    );
+}
+
+// !collapse(1:6) collapsed
+// ...previous Test order data
+const testOrder: Order = {
+  id: "ORD-12345",
+  items: 3,
+  total: 75.00
+};
+
+// !collapse(1:13) collapsed
+// ...previous Process and handle results
+const result = processOrder(testOrder);
+
+Result.match(result, {
+  Ok: (confirmation) => {
+    console.log("✅ Order processed successfully!");
+    console.log(confirmation);
+  },
+  Err: (errors) => {
+    console.error("❌ Order processing failed:");
+    errors.forEach(err => console.error(`- ${err}`));
+  }
+});
+
+const invalidOrder: Order = {
+  id: "INVALID-123", // Wrong format
+  items: 0,           // Invalid item count
+  total: 5.00          // Below minimum
+};
+
+const errorResult = processOrder(invalidOrder);
+
+Result.match(errorResult, {
+  Ok: console.log,
+  Err: (errors) => {
+    console.error("❌ Multiple errors found:");
+    errors.forEach(err => console.error(`- ${err}`));
+  }
+});
+
+/* Output:
+❌ Multiple errors found:
+- Invalid order ID format
+- Item count must be positive
+- Minimum order amount is $10
+*/
+```
+
+</Scrollycoding>

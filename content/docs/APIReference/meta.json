@@ -1,0 +1,22 @@
+{
+    "title": "API Reference",
+    "icon": "FileText",
+    "pages": [
+      "./MapFunction",
+      "./ZipFunction",
+      "allFunction.mdx",
+      "validateFunction.mdx",
+      "isOk.mdx",
+      "isErr.mdx",
+      "isSome.mdx",
+      "isNone.mdx",
+      "isUnit.mdx",
+      "toString.mdx",
+      "innerMap.mdx",
+      "fromNullable.mdx",
+      "toPromise.mdx",
+      "./UnWrapping",
+      "./BuildingPipeline"
+    ]
+  }
+  

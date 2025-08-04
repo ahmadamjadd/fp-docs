@@ -1,0 +1,21 @@
+---
+title: isSome()
+description: Check if an Option contains a value
+---
+
+When working with `Option` types, `.isSome()` allows you to explicitly verify the presence of a value before attempting to use it. The method returns true only when the Option is in the `Some` state, meaning it contains a concrete value that can be safely operated upon. In the case of `None`, representing the absence of a value, the method returns false. This simple but powerful check integrates seamlessly with TypeScript's type system, enabling automatic type narrowing in conditional blocks so you can work with the contained value without manual type assertions.
+
+```ts
+import { Option } from "@carbonteq/fp";
+function getUserEmail(userId: number): Option<string> {
+ const userEmails: Record<number, string | null> = {
+   1: "user@example.com",
+   2: null,
+ };
+ return Option.fromNullable(userEmails[userId]);
+}
+const userEmail = getUserEmail(1);
+userEmail.isSome()
+ ? console.log("Sending verification to:", userEmail.safeUnwrap())
+ : console.log("No email found for user.");
+ ```

@@ -1,0 +1,69 @@
+---
+title: .isUnit()
+description: Check if a Result or Option contains the special UNIT value
+---
+
+## Check for Unit Value
+
+The `.isUnit()` method checks whether a `Result` or `Option` contains the special `UNIT` value, which represents a successful operation that doesn't carry meaningful data.
+
+---
+
+## How It Works
+
+When called on a `Result` or `Option`:
+
+- Returns `true` if the container holds exactly the `UNIT` value
+- Returns `false` for any other value (including other Ok/Some values)
+
+This is particularly useful for operations where success/failure matters more than the actual returned data.
+
+### Result.isUnit()
+
+For `Result` types, `.isUnit()` helps identify successful operations that intentionally return no meaningful value:
+
+```ts
+import { Result, UNIT, matchRes } from '@carbonteq/fp';
+
+
+async function deleteUser(userId: string): Promise<Result<UNIT, Error>> {
+ try {
+   // Simulate delete operation
+   await Promise.resolve(); // Simulates success
+   return Result.Ok(UNIT);
+ } catch (err) {
+   return Result.Err(new Error("Cannot delete this user!"));
+ }
+}
+const res = await deleteUser("1234");
+res.isUnit() ? console.log("Successfully Deleted!") : console.log(res.unwrapErr().message)
+```
+
+### Option.isUnit()
+
+For `Option` types, `.isUnit()` checks for the presence of the `UNIT` value specifically, distinct from regular `Some` values:
+
+```ts
+import { Option, UNIT } from "@carbonteq/fp";
+function deleteUser(userId: string): Option<UNIT> {
+ const success = true;
+ return success ? Option.Some(UNIT) : Option.None;
+}
+const result = deleteUser("user123");
+result.isUnit()
+ ? console.log("User deleted successfully!")
+ : console.log("Failed to delete user.");
+ ```
+
+---
+
+## When to Use
+
+Use `.isUnit()` when:
+- Working with operations that succeed without returning data
+- You only need to verify success status, not payload
+- Implementing command-like operations (e.g., deletions, updates)
+
+Avoid when:
+- The operation returns meaningful data in success cases
+- You need to distinguish between different success values

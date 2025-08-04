@@ -1,0 +1,49 @@
+---
+title: .unwrap()
+description: Extract the value from Result or Option, but use with caution.
+---
+
+## Extract Value or Fail
+
+`.unwrap()` is used to extract the contained value from a `Result` or an `Option`. It provides a quick way to access the success value but does so **unsafely**: it throws a runtime error if called on an error or a None.
+
+This method is best suited when you're confident that the value exists and want to avoid extra branching. However, if there’s any uncertainty about the presence of a value, you should prefer safe alternatives like `.safeUnwrap()`.
+
+---
+
+## Result.unwrap(): Extract Ok or Crash on Err
+
+When used on a `Result`, `.unwrap()` returns the value inside `Ok`. But if the result is an `Err`, it throws an exception and halts execution. This is useful for debugging or when failure is truly exceptional and should not be silently handled.
+
+### Example
+
+```ts
+import {Result} from '@carbonteq/fp';
+async function validateEmail(email : string) : Promise<Result<string, Error>>{
+  return email.includes("@") ? Result.Ok(email) : Result.Err(new Error("Invalid Email Address"));
+}
+const res = await validateEmail("muhammadahmadamjad0@gmail.com");
+res.isOk() ? console.log(res.unwrap()) : console.log(res.unwrapErr());
+```
+
+---
+
+## Option.unwrap(): Extract Some or Crash on None
+
+For `Option`, `.unwrap()` works the same way — it gives you the value inside `Some`, but throws an error if the option is `None`. This makes it a risky choice unless you're absolutely sure a value is present.
+
+### Example
+
+```ts
+import { Option } from "@carbonteq/fp";
+function getUserName(userId: string): Option<string> {
+ // Simulating lookup
+ const database : Record<string, string> = { "user123": "Ahmad" };
+ const name = database[userId];
+ return name ? Option.Some(name) : Option.None;
+}
+const userName = getUserName("user12").unwrap();
+console.log(`User's name is ${userName}`);
+```
+
+---

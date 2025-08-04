@@ -1,0 +1,229 @@
+---
+title: .map()
+description: Learn how to transform values inside Result and Option using map.
+---
+
+Functional programming is all about transforming values in a clean, predictable way. The `map` function is one of the most fundamental tools for this. It helps you take a value wrapped inside a container like `Result` or `Option` and apply a transformation, **only if** the value is actually there (i.e., a success or a present value).
+
+Think of `map` as a polite transformer: it only acts when it’s welcome. If there’s an `Ok` or `Some` value inside, it steps in and applies your function. But if there’s an `Err` or `None`, it quietly steps aside and returns the container untouched.
+
+---
+
+## Why Use `map`?
+
+In real-world applications, we often need to manipulate values conditionally. For example:
+
+- You fetch some data and want to transform it (e.g., format a name, parse a number).
+- You want to keep error handling untouched while modifying only the successful result.
+- You want to chain computations elegantly without constantly checking for nulls or errors.
+
+This is exactly where `map` shines: it lets you transform values **only if** they're present and valid.
+
+---
+
+## How It Works with `Result`
+
+When used with a `Result`, the `map` function allows you to transform the value inside an `Ok` without touching the `Err`. This is extremely useful when you want to modify success values in a chainable and safe way.
+
+### What Happens:
+
+- If the result is `Ok(value)`, `map` applies your function to that value and returns a new `Ok(mappedValue)`.
+- If the result is `Err(error)`, `map` does nothing and returns the original `Err`.
+
+This ensures that your error-handling stays intact while still enabling transformations on successful outcomes.
+
+### Error Safety
+
+One of the key benefits of using `map` on a `Result` is that it allows transformation while maintaining strict error propagation. You don’t accidentally override errors or forget to check for them. This structure ensures safety.
+
+### Example
+
+```ts
+import { Result, Ok, Err } from "@carbonteq/fp"
+
+async function isAdult(age: string): Promise<Result<string, Error>> {
+  const result = await Promise.resolve(Ok(age))
+    .then((res) => res.map((str) => parseInt(str, 10)))
+
+  return result.isOk() && result.safeUnwrap()! > 18
+    ? Ok("18+")
+    : Err(new Error("Underage"))
+}
+
+// Example usage
+const res = await isAdult("11")
+res.match({
+  Ok(value) {
+    console.log("Adult:", value)
+  },
+  Err(error) {
+    console.error("Error:", error.message)
+  }
+})
+```
+
+---
+
+## How It Works with `Option`
+
+The concept is very similar when working with `Option`. The `map` function will only apply your function **if the option contains a value**.
+
+### What Happens:
+
+- If the value is `Some(value)`, the function is applied and the result becomes `Some(mappedValue)`.
+- If the value is `None`, the function is **not called at all**, and it simply stays `None`.
+
+This is great for avoiding null checks and keeping your logic concise. You can freely map over values without worrying about whether they exist. If they don’t, `map` just passes it along.
+
+### Example
+
+```ts
+import { Option } from "@carbonteq/fp"
+
+function getFirstName(userId: string): Option<string> {
+  const db: Record<string, string> = { user123: "ahmad" }
+  const name = db[userId]
+  return name ? Option.Some(name) : Option.None
+}
+
+const result = getFirstName("user123")
+  .map((name) => name.toUpperCase())
+
+console.log("First Name:", result.safeUnwrap())
+
+```
+---
+
+## Why `map` Makes Life Easier
+
+Whether you’re using `Result` or `Option`, `map` lets you:
+
+- Write less code: no need for repeated `if` checks
+- Chain logic safely and cleanly
+- Focus on the transformation, not the control flow
+- Avoid bugs due to unchecked `null` or unexpected errors
+
+In short, `map` helps you **embrace immutability and safety** while writing more expressive code.
+
+---
+
+## Example: Without and With `map`
+
+Below, we’ll see two versions of the same task — one using traditional conditional checks and the other using `map`. You’ll see how much cleaner and declarative the code becomes.
+
+<GoodBadCode
+  goodDescription="Using `map()` with Carbonteq's Result type provides:"
+  goodPoints={[
+    "Declarative value transformation without unwrapping",
+    "Automatic error propagation - no manual `isOk()` checks needed"
+  ]}
+  badDescription="Manual Result handling without `map()` leads to:"
+  badPoints={[
+    "Verbose conditional logic for success/failure cases",
+    "Manual error propagation through if-else blocks"
+  ]}
+  goodCode={`import { Result } from "@carbonteq/fp";
+
+// With map(): Clean transformation pipeline
+async function processUserAge(age: string): Promise<Result<string, Error>> {
+  return Result.Ok(age)
+    .map(ageStr => parseInt(ageStr, 10))  // Convert string to number
+    .map(ageNum => ageNum >= 18 ? "Adult" : "Minor")
+    .toPromise();
+}
+
+// Usage remains the same:
+const result = await processUserAge("25");
+// Result.Ok("Adult")`}
+  badCode={`import { Result } from "@carbonteq/fp";
+
+// Without map(): Manual unwrapping and checking
+async function processUserAge(age: string): Promise<Result<string, Error>> {
+  const ageResult = await Result.Ok(age).toPromise();
+  
+  if (ageResult.isOk()) {
+    const ageStr = ageResult.unwrap();
+    const ageNum = parseInt(ageStr, 10);
+    
+    if (!isNaN(ageNum)) {
+      return Result.Ok(ageNum >= 18 ? "Adult" : "Minor");
+    }
+    return Result.Err(new Error("Invalid number"));
+  }
+  return ageResult; // Must manually propagate error
+}
+
+// Usage:
+const result = await processUserAge("25");
+// More code, same result`}
+  showViewButton={true}
+/>
+
+
+---
+
+## Exercise: Convert Code Using `map`
+
+Here's a basic function that converts a string age into a number and checks if the user is an adult. It’s written in an imperative way.
+
+```ts
+import { Result, Ok, Err } from "@carbonteq/fp"
+
+async function isAdult(age: string): Promise<Result<string, Error>> {
+  const result = await Promise.resolve(Ok(age))
+
+  if (result.isOk()) {
+    const ageStr = result.safeUnwrap()!
+    const ageInt = parseInt(ageStr, 10)
+
+    return ageInt > 18
+      ? Ok("18+")
+      : Err(new Error("Underage"))
+  }
+
+  return Err(new Error("Invalid age input"))
+}
+```
+
+
+Your task is to **refactor it using `Result.map()`** so that the transformation is done functionally.
+<SandPack
+  code={`import { Result, Ok, Err } from "@carbonteq/fp"
+
+async function isAdult(age: string): Promise<Result<string, Error>> {
+  const result = await Promise.resolve(Ok(age))
+
+  if (result.isOk()) {
+    const ageStr = result.safeUnwrap()!
+    const ageInt = parseInt(ageStr, 10)
+
+    return ageInt > 18
+      ? Ok("18+")
+      : Err(new Error("Underage"))
+  }
+
+  return Err(new Error("Invalid age input"))
+}`}
+/>
+
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result, Ok, Err } from "@carbonteq/fp"
+
+async function isAdult(age: string): Promise<Result<string, Error>> {
+  const result = await Promise.resolve(Ok(age))
+    .then((res) => res.map((str) => parseInt(str, 10)))
+
+  return result.isOk() && result.safeUnwrap()! > 18
+    ? Ok("18+")
+    : Err(new Error("Underage"))
+}`}
+/>
+
+
+
+
+---
+
+Feel free to play around with the code, tweak the transformation logic, and observe how `map` makes your code more elegant and robust!

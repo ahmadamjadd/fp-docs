@@ -1,0 +1,35 @@
+---
+title: .isErr()
+description: Check if a Result is in the error (Err) state.
+---
+
+## Check for Error State
+
+The `.isErr()` method checks whether a `Result` is in the error state. It returns a boolean value that indicates if the result contains an `Err` value, enabling type-safe error handling in your code.
+
+---
+
+## How It Works
+
+When called on a `Result`:
+
+- Returns `true` if the result is `Err(error)`
+- Returns `false` if the result is `Ok(value)`
+
+In TypeScript, using `.isErr()` in a conditional statement will automatically narrow the type, giving you type-safe access to the contained error.
+
+### Example: Basic Usage
+
+```ts
+import { Result } from '@carbonteq/fp';
+
+const result = Result.Err(new Error("Operation failed"));
+
+if (result.isErr()) {
+  // TypeScript knows 'result' is Err here
+  console.error("Error:", result.unwrapErr());
+} else {
+  // TypeScript knows 'result' is Ok here
+  console.log("Success:", result.unwrap());
+}
+```

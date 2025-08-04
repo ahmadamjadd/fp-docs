@@ -1,0 +1,51 @@
+---
+title: What is Functional Programming?
+description: Learn what Functional Programming is, and how it helps you write better, safer, and more predictable code.
+---
+
+Functional Programming (FP) is a programming paradigm that treats computation as the **evaluation of mathematical functions** and **avoids changing state or mutable data**.
+
+It focuses on **what to do**, not **how to do it**. That means instead of giving the computer step-by-step instructions that change state as they go, you describe your problem and the transformations required to solve it.
+
+In FP, functions are treated as **first-class citizens**. They can be passed around as values, composed together, and reused in powerful ways. The emphasis is on **pure functions**, **immutability**, and **declarative logic**.
+
+> You’ve probably already used bits of FP if you’ve used `.map()`, `.filter()`, or `.reduce()` in JavaScript!
+
+---
+
+## Core principles of FP
+
+Here are some of the foundational ideas that make FP work:
+
+- **Pure Functions**: A function that always returns the same output for the same input and has no side effects (e.g., doesn’t modify a global variable or log to the console).
+- **Immutability**: Data is never modified in-place. Instead, new data structures are returned.
+- **Function Composition**: Small, single-purpose functions are composed together to build more complex operations.
+- **Higher-Order Functions**: Functions that can take other functions as input or return them as output.
+- **Referential Transparency**: An expression can be replaced with its value without changing the behavior of the program.
+
+---
+
+## Why does FP matter?
+
+JavaScript gives you a lot of freedom, but with that freedom comes complexity. Mutable state, hidden side effects, and deeply nested imperative logic can lead to hard-to-find bugs and difficult-to-maintain code.
+
+Functional programming provides a **set of constraints** that, paradoxically, give you more freedom in the long run:
+
+- Freedom from bugs caused by shared state
+- Freedom to reason about your code easily
+- Freedom to reuse and test functions in isolation
+- Freedom to express transformations clearly and concisely
+
+In short, **FP helps you write code that is easier to reason about, test, and maintain**.
+
+---
+
+## Is FP a silver bullet?
+
+Not at all. But it’s a powerful tool in your toolbox, especially for building **robust**, **predictable**, and **composable** systems.
+
+You don't have to go "full FP" to benefit from its principles. Even small doses, like using `.map()` instead of `for` loops, can go a long way.
+
+In this documentation, we'll explore how FP can help you improve your code, step by step.
+
+---

@@ -1,0 +1,26 @@
+---
+title: .fromNullable()
+description: Convert nullable values to Option types
+---
+
+# The `fromNullable` Constructor
+
+The `Option.fromNullable()` method serves as a bridge between nullable values and the Option type, safely converting values that might be null or undefined into a proper Option container. This constructor is particularly useful when working with existing code or APIs that use null to represent absence.
+
+When you pass a value to `Option.fromNullable()`, it automatically handles the null check for you. If the input value is null or undefined, it returns `Option.None`, representing the absence of a value. For any other non-null value, it wraps the value in `Option.Some`, clearly indicating the presence of valid data. This conversion allows you to immediately begin working with the value using Option's safe transformation methods rather than dealing with potentially unsafe null checks.
+
+```ts
+import { Option } from "@carbonteq/fp";
+type User = { id: number; name: string };
+function findUserById(id: number): User | null {
+ const users = [
+   { id: 1, name: "Ali" },
+   { id: 2, name: "Sara" },
+ ];
+ return users.find((u) => u.id === id) || null;
+}
+const userOption = Option.fromNullable(findUserById(2));
+console.log(userOption.toString());
+const missingUser = Option.fromNullable(findUserById(99));
+console.log(missingUser.toString());
+```

@@ -1,0 +1,634 @@
+---
+title: "Async Programming with toPromise()"
+description: "Learn how to seamlessly integrate synchronous FP pipelines with async JavaScript using Carbonteq's toPromise() method."
+---
+
+Carbonteq FP bridges functional programming with async JavaScript through the powerful `toPromise()` method. This conversion enables you to:
+
+- Integrate FP pipelines with async/await syntax
+- Combine synchronous and asynchronous operations
+- Handle promises in a type-safe manner
+- Maintain functional composition in async workflows
+
+## Understanding `toPromise()`
+
+The `toPromise()` method converts `Option` and `Result` types to native JavaScript promises:
+
+```ts
+// For Option<T>
+const promise: Promise<T | null> = option.toPromise();
+
+// For Result<T, E>
+const promise: Promise<T> = result.toPromise();
+```
+
+### For `Option<T>`:
+- `Option.Some(value)` → Resolves to `value` (type `T`)
+- `Option.None` → Resolves to `null` (type `null`)
+
+### For `Result<T, E>`:
+- `Result.Ok(value)` → Resolves to `value` (type `T`)
+- `Result.Err(error)` → Rejects with `error` (type `E`)
+
+Key characteristics:
+- Maintains type safety through conversion
+- Preserves the original types during transformation
+- Works seamlessly with both synchronous and asynchronous pipelines
+
+## Basic Async Example: User Profile Fetch
+
+```ts
+import { Option } from "@carbonteq/fp";
+
+// Simulated async API calls
+async function fetchUserId(email: string): Promise<Option<string>> {
+  return email.includes("@") 
+    ? Option.Some(`user_${email.split("@")[0]}`)
+    : Option.None;
+}
+
+async function fetchUserProfile(id: string): Promise<Option<{ name: string }>> {
+  return Option.Some({ name: "Alex Johnson" });
+}
+
+// Async pipeline using toPromise()
+async function getUserProfile(email: string) {
+  try {
+    const userId = await fetchUserId(email)
+      .flatMap(id => fetchUserProfile(id))
+      .toPromise();
+
+    return userId 
+      ? `Welcome, ${userId.name}!` 
+      : "Profile not found";
+  } catch (error) {
+    return "Error fetching profile";
+  }
+}
+
+// Usage
+getUserProfile("alex@example.com").then(console.log);
+// Output: "Welcome, Alex Johnson!"
+```
+## Real-World Example: User Registration Pipeline
+Here's a complete async workflow demonstrating validation, database operations, and email notification:
+
+<Scrollycoding>
+
+## !!steps Handling User Orders Asynchronously
+
+In this tutorial, we'll build an async order processing pipeline using Carbonteq's fp utilities. We'll demonstrate how to handle validation, database operations, payment processing, and inventory management in an asynchronous workflow using Result and async/await.
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+import { Result } from "@carbonteq/fp";
+
+interface Order {
+  id: string;
+  customerId: string;
+  items: OrderItem[];
+  total: number;
+}
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+```
+## !!steps Defining Async Validation Functions
+
+First, we create async validation functions that check against external systems:
+
+-Validate customer exists in database
+
+-Check inventory availability
+
+-Verify payment method
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+
+import { Result } from "@carbonteq/fp";
+
+interface Order {
+  id: string;
+  customerId: string;
+  items: OrderItem[];
+  total: number;
+}
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+// Async validation: Check if customer exists
+async function validateCustomer(order: Order): Promise<Result<Order, string>> {
+  // Simulate database lookup
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const validCustomers = ["CUST-001", "CUST-002", "CUST-003"];
+  return validCustomers.includes(order.customerId)
+    ? Result.Ok(order)
+    : Result.Err("Customer not found");
+}
+
+// Async validation: Check inventory availability
+async function validateInventory(order: Order): Promise<Result<Order, string>> {
+  // Simulate inventory service call
+  await new Promise(resolve => setTimeout(resolve, 150));
+  
+  const inventory = {
+    "PROD-001": 100,
+    "PROD-002": 50,
+    "PROD-003": 25
+  };
+  
+  for (const item of order.items) {
+    const available = inventory[item.productId] || 0;
+    if (available < item.quantity) {
+      return Result.Err(`Insufficient inventory for ${item.productId}`);
+    }
+  }
+  
+  return Result.Ok(order);
+}
+
+// Async validation: Verify payment method
+async function validatePayment(order: Order): Promise<Result<Order, string>> {
+  // Simulate payment gateway validation
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  return order.total > 0 && order.total <= 10000
+    ? Result.Ok(order)
+    : Result.Err("Invalid payment amount");
+}
+```
+
+## !!steps Creating Async Processing Functions
+
+Next, we'll add async processing functions that interact with external services:
+
+-Reserve inventory items
+
+-Process payment
+
+-Update order status in database
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+
+// !collapse(1:13) collapsed
+// ...previous interfaces
+interface Order {
+  id: string;
+  customerId: string;
+  items: OrderItem[];
+  total: number;
+}
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+// !collapse(1:10) collapsed
+// ...previous validateCustomer function
+async function validateCustomer(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const validCustomers = ["CUST-001", "CUST-002", "CUST-003"];
+  return validCustomers.includes(order.customerId)
+    ? Result.Ok(order)
+    : Result.Err("Customer not found");
+}
+
+// !collapse(1:19) collapsed
+// ...previous validateInventory function
+async function validateInventory(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 150));
+  
+  const inventory = {
+    "PROD-001": 100,
+    "PROD-002": 50,
+    "PROD-003": 25
+  };
+  
+  for (const item of order.items) {
+    const available = inventory[item.productId] || 0;
+    if (available < item.quantity) {
+      return Result.Err(`Insufficient inventory for ${item.productId}`);
+    }
+  }
+  
+  return Result.Ok(order);
+}
+
+// !collapse(1:8) collapsed
+// ...previous validatePayment function
+async function validatePayment(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  return order.total > 0 && order.total <= 10000
+    ? Result.Ok(order)
+    : Result.Err("Invalid payment amount");
+}
+
+// Reserve inventory for the order
+async function reserveInventory(order: Order): Promise<Result<Order, string>> {
+  // Simulate inventory reservation API call
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  console.log(`🔒 Reserved inventory for order ${order.id}`);
+  return Result.Ok(order);
+}
+
+// Process payment through payment gateway
+async function processPayment(order: Order): Promise<Result<Order, string>> {
+  // Simulate payment processing
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Random payment failure for demo (10% chance)
+  if (Math.random() < 0.1) {
+    return Result.Err("Payment processing failed");
+  }
+  
+  console.log(`💳 Payment processed: $${order.total.toFixed(2)}`);
+  return Result.Ok(order);
+}
+
+// Update order status in database
+async function updateOrderStatus(order: Order): Promise<Result<string, string>> {
+  // Simulate database update
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const confirmation = `
+    Order ID: ${order.id}
+    Customer: ${order.customerId}
+    Items: ${order.items.length} products
+    Total: $${order.total.toFixed(2)}
+    Status: Confirmed
+    Timestamp: ${new Date().toISOString()}
+  `;
+  
+  console.log(`📋 Order ${order.id} status updated`);
+  return Result.Ok(confirmation);
+}
+```
+## !!steps Building the Async Processing Pipeline
+
+Now we'll chain our async operations using the fp utilities:
+
+-Run validations in parallel for efficiency
+
+-Process payment and inventory sequentially
+
+-Handle all errors gracefully
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+// !collapse(1:13) collapsed
+// ...previous interfaces
+interface Order {
+  id: string;
+  customerId: string;
+  items: OrderItem[];
+  total: number;
+}
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+// !collapse(1:10) collapsed
+// ...previous validateCustomer function
+async function validateCustomer(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const validCustomers = ["CUST-001", "CUST-002", "CUST-003"];
+  return validCustomers.includes(order.customerId)
+    ? Result.Ok(order)
+    : Result.Err("Customer not found");
+}
+
+// !collapse(1:19) collapsed
+// ...previous validateInventory function
+async function validateInventory(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 150));
+  
+  const inventory = {
+    "PROD-001": 100,
+    "PROD-002": 50,
+    "PROD-003": 25
+  };
+  
+  for (const item of order.items) {
+    const available = inventory[item.productId] || 0;
+    if (available < item.quantity) {
+      return Result.Err(`Insufficient inventory for ${item.productId}`);
+    }
+  }
+  
+  return Result.Ok(order);
+}
+
+// !collapse(1:8) collapsed
+// ...previous validatePayment function
+async function validatePayment(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  return order.total > 0 && order.total <= 10000
+    ? Result.Ok(order)
+    : Result.Err("Invalid payment amount");
+}
+
+// !collapse(1:8) collapsed
+// ...previous reserveInventory function
+async function reserveInventory(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  console.log(`🔒 Reserved inventory for order ${order.id}`);
+  return Result.Ok(order);
+}
+
+// !collapse(1:12) collapsed
+// ...previous processPayment function
+async function processPayment(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  if (Math.random() < 0.1) {
+    return Result.Err("Payment processing failed");
+  }
+  
+  console.log(`💳 Payment processed: $${order.total.toFixed(2)}`);
+  return Result.Ok(order);
+}
+
+// !collapse(1:16) collapsed
+// ...previous updateOrderStatus function
+async function updateOrderStatus(order: Order): Promise<Result<string, string>> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const confirmation = `
+    Order ID: ${order.id}
+    Customer: ${order.customerId}
+    Items: ${order.items.length} products
+    Total: $${order.total.toFixed(2)}
+    Status: Confirmed
+    Timestamp: ${new Date().toISOString()}
+  `;
+  
+  console.log(`📋 Order ${order.id} status updated`);
+  return Result.Ok(confirmation);
+}
+
+// Main async processing pipeline
+async function processOrderAsync(order: Order): Promise<Result<string, string[]>> {
+  console.log(`🚀 Starting async processing for order ${order.id}...`);
+  
+  try {
+    // Step 1: Run validations in parallel for better performance
+    const [customerResult, inventoryResult, paymentResult] = await Promise.all([
+      validateCustomer(order),
+      validateInventory(order),
+      validatePayment(order)
+    ]);
+    
+    // Combine validation results
+    const validationErrors: string[] = [];
+    if (customerResult.isErr()) validationErrors.push(customerResult.error);
+    if (inventoryResult.isErr()) validationErrors.push(inventoryResult.error);
+    if (paymentResult.isErr()) validationErrors.push(paymentResult.error);
+    
+    if (validationErrors.length > 0) {
+      return Result.Err(validationErrors);
+    }
+    
+    // Step 2: Process sequentially (order matters)
+    const reserveResult = await reserveInventory(order);
+    if (reserveResult.isErr()) {
+      return Result.Err([reserveResult.error]);
+    }
+    
+    const paymentProcessResult = await processPayment(order);
+    if (paymentProcessResult.isErr()) {
+      return Result.Err([paymentProcessResult.error]);
+    }
+    
+    const confirmationResult = await updateOrderStatus(order);
+    if (confirmationResult.isErr()) {
+      return Result.Err([confirmationResult.error]);
+    }
+    
+    return Result.Ok(confirmationResult.value);
+    
+  } catch (error) {
+    return Result.Err([`Unexpected error: ${error.message}`]);
+  }
+}
+```
+
+## !!steps Handling Async Results with Pattern Matching
+
+Finally, we'll demonstrate how to handle async results with proper error handling:
+
+{/* prettier-ignore */}
+```ts ! order-processor.ts
+// !collapse(1:13) collapsed
+// ...previous interfaces
+interface Order {
+  id: string;
+  customerId: string;
+  items: OrderItem[];
+  total: number;
+}
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+// !collapse(1:10) collapsed
+// ...previous validateCustomer function
+async function validateCustomer(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const validCustomers = ["CUST-001", "CUST-002", "CUST-003"];
+  return validCustomers.includes(order.customerId)
+    ? Result.Ok(order)
+    : Result.Err("Customer not found");
+}
+
+// !collapse(1:19) collapsed
+// ...previous validateInventory function
+async function validateInventory(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 150));
+  
+  const inventory = {
+    "PROD-001": 100,
+    "PROD-002": 50,
+    "PROD-003": 25
+  };
+  
+  for (const item of order.items) {
+    const available = inventory[item.productId] || 0;
+    if (available < item.quantity) {
+      return Result.Err(`Insufficient inventory for ${item.productId}`);
+    }
+  }
+  
+  return Result.Ok(order);
+}
+
+// !collapse(1:8) collapsed
+// ...previous validatePayment function
+async function validatePayment(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  return order.total > 0 && order.total <= 10000
+    ? Result.Ok(order)
+    : Result.Err("Invalid payment amount");
+}
+
+// !collapse(1:8) collapsed
+// ...previous reserveInventory function
+async function reserveInventory(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  console.log(`🔒 Reserved inventory for order ${order.id}`);
+  return Result.Ok(order);
+}
+
+// !collapse(1:12) collapsed
+// ...previous processPayment function
+async function processPayment(order: Order): Promise<Result<Order, string>> {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  if (Math.random() < 0.1) {
+    return Result.Err("Payment processing failed");
+  }
+  
+  console.log(`💳 Payment processed: $${order.total.toFixed(2)}`);
+  return Result.Ok(order);
+}
+
+// !collapse(1:16) collapsed
+// ...previous updateOrderStatus function
+async function updateOrderStatus(order: Order): Promise<Result<string, string>> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const confirmation = `
+    Order ID: ${order.id}
+    Customer: ${order.customerId}
+    Items: ${order.items.length} products
+    Total: $${order.total.toFixed(2)}
+    Status: Confirmed
+    Timestamp: ${new Date().toISOString()}
+  `;
+  
+  console.log(`📋 Order ${order.id} status updated`);
+  return Result.Ok(confirmation);
+}
+
+// !collapse(1:45) collapsed
+// ...previous Main async processing pipeline
+async function processOrderAsync(order: Order): Promise<Result<string, string[]>> {
+  console.log(`🚀 Starting async processing for order ${order.id}...`);
+  
+  try {
+    // Step 1: Run validations in parallel for better performance
+    const [customerResult, inventoryResult, paymentResult] = await Promise.all([
+      validateCustomer(order),
+      validateInventory(order),
+      validatePayment(order)
+    ]);
+    
+    // Combine validation results
+    const validationErrors: string[] = [];
+    if (customerResult.isErr()) validationErrors.push(customerResult.error);
+    if (inventoryResult.isErr()) validationErrors.push(inventoryResult.error);
+    if (paymentResult.isErr()) validationErrors.push(paymentResult.error);
+    
+    if (validationErrors.length > 0) {
+      return Result.Err(validationErrors);
+    }
+    
+    // Step 2: Process sequentially (order matters)
+    const reserveResult = await reserveInventory(order);
+    if (reserveResult.isErr()) {
+      return Result.Err([reserveResult.error]);
+    }
+    
+    const paymentProcessResult = await processPayment(order);
+    if (paymentProcessResult.isErr()) {
+      return Result.Err([paymentProcessResult.error]);
+    }
+    
+    const confirmationResult = await updateOrderStatus(order);
+    if (confirmationResult.isErr()) {
+      return Result.Err([confirmationResult.error]);
+    }
+    
+    return Result.Ok(confirmationResult.value);
+    
+  } catch (error) {
+    return Result.Err([`Unexpected error: ${error.message}`]);
+  }
+}
+
+// Test order data
+const testOrder: Order = {
+  id: "ORD-ASYNC-001",
+  customerId: "CUST-001",
+  items: [
+    { productId: "PROD-001", quantity: 2, price: 25.00 },
+    { productId: "PROD-002", quantity: 1, price: 30.00 }
+  ],
+  total: 80.00
+};
+
+// Process and handle async results
+async function handleOrderProcessing() {
+  const startTime = Date.now();
+  const result = await processOrderAsync(testOrder);
+  const duration = Date.now() - startTime;
+  
+  Result.match(result, {
+    Ok: (confirmation) => {
+      console.log("✅ Async order processed successfully!");
+      console.log(confirmation);
+      console.log(`⏱️  Total processing time: ${duration}ms`);
+    },
+    Err: (errors) => {
+      console.error("❌ Async order processing failed:");
+      errors.forEach(err => console.error(`- ${err}`));
+      console.log(`⏱️  Failed after: ${duration}ms`);
+    }
+  });
+}
+
+// Run the async processing
+handleOrderProcessing();
+
+/* Successful output:
+🚀 Starting async processing for order ORD-ASYNC-001...
+🔒 Reserved inventory for order ORD-ASYNC-001
+💳 Payment processed: $80.00
+📋 Order ORD-ASYNC-001 status updated
+✅ Async order processed successfully!
+    Order ID: ORD-ASYNC-001
+    Customer: CUST-001
+    Items: 2 products
+    Total: $80.00
+    Status: Confirmed
+    Timestamp: 2024-08-03T10:30:45.123Z
+⏱️  Total processing time: 1250ms
+*/
+```
+
+</Scrollycoding>

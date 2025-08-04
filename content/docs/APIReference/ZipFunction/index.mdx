@@ -1,0 +1,168 @@
+---
+title: .zip()
+description: Combine values using `.zip()` to create tuples from Results or Options.
+---
+
+# Combining Values
+
+In functional programming, you often want to take an existing value and pair it with something else derived from it, all while staying inside the same flow. The `.zip()` function helps you do exactly that. Instead of just transforming a value, `.zip()` lets you generate a new one and return both side-by-side. The end result is a tuple of the original and derived values, still wrapped in the original type, whether it’s a `Result` or an `Option`.
+
+---
+
+## Understanding `.zip()` on `Result`
+
+The `.zip()` function on a `Result` combines the current `Ok` value with a new one, produced by a function. If the `Result` is already `Ok(value)`, the function is applied to that value and a new `Ok([value, fn(value)])` is returned. However, if the `Result` is `Err(error)`, then nothing is done. The error is preserved, and the function is skipped.
+
+This is useful when you want to derive additional context from a value while keeping the original. It allows you to build composite values and maintain clear control flow without branching logic.
+
+### Example
+
+```ts
+import { Result } from "@carbonteq/fp";
+const getUserName = (): Result<string, string> => {
+ return Result.Ok("Ahmad");
+};
+const welcomeUser = (name: string): string => {
+ return `Welcome, ${name}!`;
+};
+const result = getUserName().zip(welcomeUser);
+console.log(result.toString());
+```
+
+---
+
+## Understanding `.zip()` on `Option`
+
+The `.zip()` function works similarly on `Option`. When the current value is `Some(value)`, it applies your function to that value and returns `Some([value, fn(value)])`. If the current value is `None`, the function is never called and the result remains `None`.
+
+This is helpful for cases where you want to derive a secondary value from an optional input, but still preserve the structure and safety guarantees of the `Option` type.
+
+### Example
+
+```ts
+import { Option } from "@carbonteq/fp";
+const firstName = Option.Some("John");
+const fullName = firstName.zip((name) => `${name} Doe`);
+console.log(fullName.safeUnwrap());  // Output → ["John", "John Doe"]
+```
+
+---
+
+## Without and With Examples
+
+Here’s a comparison of an imperative-style implementation versus one using `.zip()`. This will help you see how `.zip()` simplifies logic by keeping transformations declarative and clean.
+
+<GoodBadCode
+  goodDescription="Using `zip()` provides:"
+  goodPoints={[
+    "Concise pairing of values with their transformations",
+    "Automatic error handling without manual checks"
+  ]}
+  badDescription="Manual pairing requires:"
+  badPoints={[
+    "Explicit unwrapping and rewrapping of values",
+    "Manual error state propagation"
+  ]}
+  goodCode={`import { Result } from "@carbonteq/fp";
+
+const user = Result.Ok("Ahmad");
+const greeting = user.zip(name => "Hello " + name);
+// Result.Ok(["Ahmad", "Hello Ahmad"])`}
+  badCode={`import { Result } from "@carbonteq/fp";
+
+const user = Result.Ok("Ahmad");
+let greeting;
+
+if (user.isOk()) {
+  const name = user.unwrap();
+  greeting = Result.Ok([name, "Hello " + name]);
+} else {
+  greeting = user;
+}`}
+  showViewButton={true}
+/>
+
+---
+
+## Exercise: Refactor with `.zip()`
+
+The code below shows a manual step-by-step derivation of values. 
+
+```ts
+import { Result, Ok, Err } from "@carbonteq/fp"
+
+function getUserName(): Result<string, string> {
+  return Ok("Ahmad")
+}
+
+function welcomeUser(name: string): string {
+  return `Welcome, ${name}!`
+}
+
+function greetUser(): Result<[string, string], string> {
+  const userResult = getUserName()
+
+  if (userResult.isErr()) {
+    return userResult
+  }
+
+  const name = userResult.safeUnwrap()!
+  const message = welcomeUser(name)
+
+  return Ok([name, message])
+}
+
+console.log(greetUser().toString())
+```
+Your task is to refactor it using `.zip()` to make the transformation more fluent and compositional.
+
+<SandPack
+  code={`import { Result, Ok, Err } from "@carbonteq/fp"
+
+function getUserName(): Result<string, string> {
+  return Ok("Ahmad")
+}
+
+function welcomeUser(name: string): string {
+  return \`Welcome, \${name}!\`
+}
+
+function greetUser(): Result<[string, string], string> {
+  const userResult = getUserName()
+
+  if (userResult.isErr()) {
+    return userResult
+  }
+
+  const name = userResult.safeUnwrap()!
+  const message = welcomeUser(name)
+
+  return Ok([name, message])
+}
+
+console.log(greetUser().toString())`}
+/>
+
+
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result, Ok } from "@carbonteq/fp"
+
+function getUserName(): Result<string, string> {
+  return Ok("Ahmad")
+}
+
+function welcomeUser(name: string): string {
+  return \`Welcome, \${name}!\`
+}
+
+const result = getUserName().zip(welcomeUser)
+
+console.log(result.toString())`}
+/>
+
+
+---
+
+Using `.zip()` is a powerful way to enrich data in-place, keeping your code clean, expressive, and fully composable within the functional paradigm.

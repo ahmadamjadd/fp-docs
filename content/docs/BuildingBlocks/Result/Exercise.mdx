@@ -1,0 +1,41 @@
+---
+title: Result Exercise
+description: Practice transforming code into Result-based form.
+---
+
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+
+## Result Type Exercise
+
+Here's a simple function that throws an error when dividing by zero. Your task is to **convert it into a `Result`-based version** using the `Result` monad.
+
+```ts
+function divide(a: number, b: number): number {
+  if (b === 0) throw new Error("Cannot divide by zero")
+  return a / b
+}
+```
+
+Try rewriting it using `Result`, `ok`, and `err`.
+
+<SandPack
+  code={`function divide(a: number, b: number): number {
+  if (b === 0) throw new Error("Cannot divide by zero")
+  return a / b
+}
+
+console.log(divide(10, 2))`}
+/>
+
+
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result, ok, err } from "carbonteq-fp"
+
+function divide(a: number, b: number): Result<number, string> {
+  return b === 0 ? err("Cannot divide by zero") : ok(a / b)
+}`}
+/>
+

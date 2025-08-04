@@ -1,0 +1,70 @@
+---
+title: .innerMap()
+description: Transform array elements inside Result or Option containers
+---
+
+## .innerMap(): Array Element Transformation
+
+The `.innerMap()` method provides specialized array transformation capabilities for `Result` and `Option` types containing arrays, allowing element-wise operations while preserving the container context.
+
+---
+
+## Result.innerMap()
+
+Applies a mapping function to each element of an array contained within a `Result`:
+
+- Transforms `Ok(array)` by mapping over array elements
+- Leaves `Err` values unchanged
+- Returns a new `Result` with transformed array
+
+```ts
+import { Result } from "@carbonteq/fp";
+const fetchUserEmails = (): Result<string[], string> => {
+ return Result.Ok(["Ahmad@example.com", "User2@example.com"]);
+};
+const result_lower = fetchUserEmails().innerMap((email) => email.toLowerCase());
+console.log(result_lower.toString());
+```
+
+### Key Features:
+- Preserves Result context (Ok/Err state)
+- Only operates when containing an array
+- Maintains original error if present
+- Chainable with other Result methods
+
+---
+
+## Option.innerMap()
+
+Applies a mapping function to each element of an array contained within an `Option`:
+
+- Transforms `Some(array)` by mapping over elements
+- Leaves `None` values unchanged
+- Returns a new `Option` with transformed array
+
+```ts
+import { Option } from "@carbonteq/fp";
+const productPrices = Option.Some([100, 200, 300]);
+const discountedPrices = productPrices.innerMap(price => price * 0.9);
+console.log(discountedPrices.safeUnwrap()); 
+// Output → [90, 180, 270]
+```
+
+### Key Features:
+- Preserves Option context (Some/None state)
+- No effect on non-array values
+- Maintains functional purity
+- Composes with other Option methods
+
+---
+
+## When to Use
+- Processing arrays of data in functional pipelines
+- Transforming collection data
+- Maintaining context in data processing chains
+- Batch operations on contained collections
+
+---
+
+## Comparison with Regular Map
+While `.map()` transforms the entire contained value, `.innerMap()` specifically targets array elements while keeping the container structure intact. This provides more precise control when working with collections inside Result/Option contexts.

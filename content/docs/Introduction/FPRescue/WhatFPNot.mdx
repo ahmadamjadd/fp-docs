@@ -1,0 +1,58 @@
+---
+title: What Functional Programming is NOT
+description: Clear up common misconceptions about functional programming.
+---
+
+Before we go any deeper, let’s clear up some common misconceptions. **Functional Programming (FP)** is often misunderstood (and sometimes even feared) because of things it *doesn’t* actually do or promise.
+
+Let’s get those myths out of the way.
+
+---
+
+## FP is NOT About Concurrency or Parallelism
+
+This is a big one. People often assume that FP is all about writing parallel code or handling asynchronous logic with ease.
+
+But **FP is not inherently about concurrency**. It’s about **composability**, **immutability**, and **pure functions**: concepts that *enable* safer concurrency, but FP itself is not a concurrency model.
+
+Think of it this way: FP helps you write code that’s **easier to reason about**, which naturally fits better into concurrent or async environments. But it doesn't magically make your code concurrent.
+
+> FP makes concurrency safer, but it doesn’t *give* you concurrency.
+
+---
+
+## FP is NOT Just “Using map and filter”
+
+Yes, `map`, `filter`, and `reduce` are useful tools, and you’ll see them a lot in FP. But FP is much more than just looping without a `for` loop.
+
+It’s about building predictable programs using **pure functions**, modeling uncertainty and failure explicitly with **types like `Option` and `Result`**, and composing your logic using **functional pipelines**.
+
+Just using a `map()` doesn’t mean you’re doing functional programming.
+
+---
+
+## FP is NOT Anti-Object-Oriented
+
+A common myth is that FP and OOP are mortal enemies. That’s not true. In fact, many real-world applications benefit from **mixing** paradigms.
+
+Functional programming encourages a **different way of thinking**, especially around **data flow**, **side effects**, and **error handling**. But it doesn’t forbid you from using classes, methods, or objects when they make sense.
+
+In fact, many modern libraries (like React) blend both paradigms beautifully.
+
+---
+
+## FP is NOT Just Theory or Academia
+
+It’s easy to dismiss FP as something only language theorists or math PhDs care about. But that’s outdated thinking.
+
+Today, FP is powering everything from **frontend frameworks** (React’s entire architecture is function-based) to **backend systems** and **cloud infrastructure**.
+
+You don’t need to understand category theory to write clean, functional code. Start with small patterns like **pure functions**, **data immutability**, and **composition**, and go from there.
+
+---
+
+## So, What *Is* FP?
+
+Functional Programming is a mindset and a set of principles for writing robust, maintainable code. It's not a silver bullet or a magic wand, but it helps you handle complexity in large systems.
+
+Let’s now explore what FP actually **is**, and how it can improve your developer experience.

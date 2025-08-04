@@ -1,0 +1,244 @@
+---
+title: Synchronous Pipeline
+description: Learn how to create a clean and composable pipeline using Carbonteq’s Result type.
+---
+
+# Build Your First Pipeline
+
+In this guide, you'll learn how to build a functional pipeline using the Carbonteq FP library. We’ll walk through a real-world example of processing an e-commerce order, and show how to elegantly handle multiple stages of validation and computation.
+
+---
+
+## Why Use a Functional Pipeline?
+
+When building applications, you often have to pass data through multiple checks and transformations, like input validation, database lookups, calculations, and final object creation.
+
+In imperative code, this usually involves nested `if` statements and error handling logic scattered across your function.
+
+With **Carbonteq’s `Result` type**, you can represent these steps as a *pipeline*, where each function either succeeds and passes its result forward or fails and short-circuits the rest of the computation.
+
+This makes your code:
+
+- Easier to read
+- Easier to test
+- Easier to modify
+
+---
+
+## The Synchronous Pipeline Flow
+
+We’ll build a pipeline for processing an e-commerce order. The flow includes:
+
+1. Validating the order’s input fields
+2. Checking inventory availability
+3. Calculating the order total
+4. Creating the final processed order object
+5. Formatting any errors that might occur
+
+Each step is represented as a function that returns a `Result`.
+
+---
+
+## Step-by-Step Breakdown
+
+We begin by wrapping the initial input using `Result.Ok(order)`, which begins the pipeline.
+
+### 1. `.validate(...)`
+
+We run multiple guards (validation functions) in sequence. If any of them fail, the error is returned and the pipeline stops there.
+
+### 2. `.flatZip(...)`
+
+We then want to calculate the total for the order. This returns another `Result`, so we use `.flatZip()` to combine the two results into a tuple: `[order, total]`.
+
+### 3. `.map(...)`
+
+Now that we have both the validated order and the calculated total, we construct a new `ProcessedOrder` object using `.map()`.
+
+### 4. `.mapErr(...)`
+
+Finally, if any step fails, we use `.mapErr()` to convert the raw error into a user-friendly message.
+
+---
+
+## Full Pipeline Example
+
+This complete example shows how to build a clean, linear flow using Carbonteq FP:
+
+```ts
+import { Result, matchRes } from "@carbonteq/fp";
+
+interface Order {
+  productId: string;
+  quantity: number;
+  userId: string;
+}
+
+interface ProcessedOrder {
+  orderId: string;
+  total: number;
+  status: "confirmed" | "failed";
+  order: Order;
+}
+
+// Validate order input
+function guardOrder(order: Order): Result<Order, string> {
+  if (!order.productId) return Result.Err("Product ID is required");
+  if (order.quantity <= 0) return Result.Err("Quantity must be positive");
+  if (!order.userId) return Result.Err("User ID is required");
+  return Result.Ok(order);
+}
+
+// Check product availability
+function guardInventoryCheck(order: Order): Result<Order, string> {
+  const availableStock = 100; // Simulated stock
+  return order.quantity <= availableStock
+    ? Result.Ok(order)
+    : Result.Err(`Insufficient stock. Available: ${availableStock}`);
+}
+
+// Calculate order total
+function calculateTotal(order: Order): Result<number, string> {
+  const price = 29.99; // Simulated price
+  return Result.Ok(order.quantity * price);
+}
+
+// Process the order
+function processOrder(order: Order): Result<ProcessedOrder, string> {
+  return Result.Ok(order)
+    .validate([guardOrder, guardInventoryCheck])
+    .flatZip(calculateTotal)
+    .map(([order, total]) => ({
+      orderId: `ORD-${Date.now()}`,
+      total: total,
+      status: "confirmed" as const,
+      order: order,
+    }))
+    .mapErr((error) => `Order processing failed: ${error}`);
+}
+
+// Usage
+const order: Order = {
+  productId: "PROD-123",
+  quantity: 2,
+  userId: "USER-456",
+};
+
+const result = processOrder(order);
+
+matchRes(result, {
+  Ok: (processedOrder) => {
+    console.log(`Order confirmed! Order ID: ${processedOrder.orderId}`);
+    console.log(`Total: $${processedOrder.total.toFixed(2)}`);
+    console.log(`Order: ${JSON.stringify(processedOrder.order)}`);
+  },
+  Err: (error) => {
+    console.error(`Error: ${error}`);
+  },
+});
+
+// Output:
+// Order confirmed! Order ID: ORD-1716888600000
+// Total: $59.98
+// Order: {"productId":"PROD-123","quantity":2,"userId":"USER-456"}
+```
+
+---
+
+## Why This Approach Works
+
+- You **never manually check for errors**: the library handles it.
+- Each function is **small, testable, and focused**.
+- You can **easily add or remove steps** without rewriting the whole function.
+- Errors are caught and handled in one place, rather than being scattered across the code.
+
+This is the power of functional composition with `Result`. By building pipelines like this, your application logic stays expressive, safe, and easy to maintain.
+
+---
+
+## Exercise: Build Your Own Pipeline
+
+Imagine you’re building a pipeline to register a user. The steps might include:
+
+- Validating the username and email
+- Checking if the user already exists
+- Saving the user to the database
+
+Try to structure these steps as individual functions and compose them using:
+
+- `Result.Ok()`
+- `.validate(...)`
+- `.flatMap(...)`
+- `.map(...)`
+- `.mapErr(...)`
+
+Use the structure from the order example as a reference.
+
+<SandPack
+  code={`\\ Write here`}
+/>
+
+
+<AnswerDialog
+  title="Sample Solution"
+  code={`import { Result } from "@carbonteq/fp"
+
+interface UserInput {
+  username: string
+  email: string
+}
+
+interface User {
+  id: string
+  username: string
+  email: string
+}
+
+// Step 1: Validate input
+function validateInput(input: UserInput): Result<UserInput, string> {
+  if (!input.username.trim()) return Result.Err("Username is required")
+  if (!input.email.includes("@")) return Result.Err("Invalid email format")
+  return Result.Ok(input)
+}
+
+// Step 2: Check if user exists
+function checkUserExists(input: UserInput): Result<UserInput, string> {
+  const existingUsers = ["johndoe", "janedoe"]
+  return existingUsers.includes(input.username)
+    ? Result.Err("Username already taken")
+    : Result.Ok(input)
+}
+
+// Step 3: Save to database
+function saveUser(input: UserInput): Result<User, string> {
+  const user: User = {
+    id: "USER-" + Date.now(),
+    username: input.username,
+    email: input.email,
+  }
+  return Result.Ok(user)
+}
+
+// Composing the pipeline
+function registerUser(input: UserInput): Result<User, string> {
+  return Result.Ok(input)
+    .validate([validateInput, checkUserExists])
+    .flatMap(saveUser)
+    .mapErr((err) => "Registration failed: " + err)
+}
+
+// Usage
+const result = registerUser({ username: "alice", email: "alice@example.com" })
+
+if (result.isOk()) {
+  console.log("✅ User registered:", result.unwrap())
+} else {
+  console.error("❌", result.unwrapErr())
+}`}
+/>
+
+
+
+---
+
+Once you’re familiar with this pattern, you can use it

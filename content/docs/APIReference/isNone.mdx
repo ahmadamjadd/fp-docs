@@ -1,0 +1,23 @@
+---
+title: .isNone()
+description: Check if an Option is empty (None state)
+---
+
+The `.isNone()` method provides a straightforward way to verify whether an `Option` container is in its empty state. This boolean check serves as the inverse of `isSome()`, specifically designed to detect the absence of values in your program's logic flow.
+
+When examining an `Option` value, `.isNone()` returns true only when the container holds no value (the `None` case), and false when it contains a concrete value (`Some` case). This method proves particularly valuable when your program logic needs to handle missing data explicitly, allowing you to implement fallback behavior or default cases when values are absent. The check integrates with TypeScript's type system to provide automatic type narrowing, ensuring type safety when working with the Option in subsequent code paths.
+
+```ts
+import { Option } from "@carbonteq/fp";
+function getProfilePic(userId: number): Option<string> {
+ const profilePics: Record<number, string | null> = {
+   1: "https://example.com/pic1.png",
+   2: null,
+ };
+ return Option.fromNullable(profilePics[userId]);
+}
+const profilePic = getProfilePic(2);
+profilePic.isNone()
+ ? console.log("Show default placeholder image.")
+ : console.log("Display user profile picture:", profilePic.safeUnwrap());
+ ```

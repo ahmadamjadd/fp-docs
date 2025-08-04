@@ -1,0 +1,151 @@
+---
+title: Why JavaScript Error Handling Fails Us?
+description: Why traditional error handling in JS is unreliable, inconsistent, and hard to scale.
+---
+
+If you’ve ever written production JavaScript, you’ve probably felt the pain of error handling. At first, it seems simple, just wrap your logic in a `try/catch`, maybe add a `.catch()` to your promise chain, and you’re good to go.
+
+But as your codebase grows, something changes. Error handling starts to feel fragile. You find yourself repeating the same patterns, debugging becomes guesswork, and it’s never really clear what might go wrong or where.
+
+Let’s explore *why* this happens.
+
+---
+
+## What’s Wrong with JavaScript Error Handling?
+
+JavaScript handles errors using exceptions, meaning errors are “thrown” during execution, and if you don’t catch them, they crash your program. Sounds reasonable on paper, right?
+
+But in practice, this model leads to a few major problems:
+
+---
+
+### Errors Are Hidden by Default
+
+In JavaScript, there’s no way to know just by looking at a function whether it might throw an error. Nothing in the syntax tells you. Unlike return values, thrown exceptions are invisible: they're not part of the function's type signature, even in TypeScript.
+
+This means you're always guessing. Will this throw? Should I add a `try/catch` here? What happens if I don’t?
+
+You end up writing defensive code everywhere, trying to prepare for problems that aren’t clearly declared.
+
+```ts
+function parseJson(str: string): any {
+  return JSON.parse(str); // Might throw, but nothing in the signature shows that
+}
+
+const result = parseJson("{ invalid json }"); // throws at runtime
+```
+
+---
+
+### Inconsistencies Everywhere
+
+JavaScript doesn’t enforce what should or shouldn’t be thrown. Some functions throw `Error` objects. Others throw strings. Some just return `null`, `undefined`, or some special value like `-1` to indicate failure.
+
+This lack of consistency makes it hard to reason about what went wrong. You can’t rely on one single pattern. You have to constantly adapt to how a library or API author *chose* to signal errors.
+
+```ts
+function mightThrow(): never {
+  throw "Something went wrong"; // Throws a string
+}
+
+function returnsNull(): string | null {
+  return null; // Indicates failure by returning null
+}
+
+function returnsSentinel(): number {
+  return -1; // -1 means "error"
+}
+```
+---
+
+### Asynchronous Errors Are Especially Painful
+
+The moment you introduce `async/await`, things get more complex. If you forget to `await` a promise, your `try/catch` won’t do anything and the error silently escapes. Even when you do use `await`, it's not always obvious whether the awaited function might reject.
+
+And when an error happens inside a `.then()` or `.catch()`, the call stack becomes harder to follow. Debugging becomes a game of chasing missing stack traces and tracing invisible rejections.
+
+```ts
+async function fetchUser(): Promise<{ name: string }> {
+  throw new Error("User not found");
+}
+
+try {
+  const user = fetchUser(); // Forgot to await — error is not caught!
+} catch (e) {
+  console.log("Will not catch this");
+}
+
+try {
+  const user = await fetchUser(); // Proper usage
+} catch (e) {
+  console.error("Caught async error", e);
+}
+```
+
+---
+
+### Scope Issues with `try/catch`
+
+Variables declared inside a `try` block are scoped to that block. So if you need to use something after the block finishes, maybe a result or some fallback value, you have to define it outside the `try`, often as a mutable variable.
+
+This breaks the flow of your logic and leads to awkward, hard-to-read code. You're forced into patterns that feel like workarounds, just to deal with language limitations.
+
+```ts
+let user;
+
+try {
+  user = JSON.parse('{"name": "Ahmad"}');
+} catch (err) {
+  user = { name: "Guest" };
+}
+
+console.log(user.name); // Need to define `user` outside try
+```
+
+---
+
+### Mixing Synchronous and Asynchronous Logic
+
+Another issue: JavaScript doesn't distinguish between sync and async errors at the syntax level. If a function can throw **or** reject a promise, you now need to handle *both* styles (`try/catch` and `.catch()`) which fragments your code and makes reasoning harder.
+
+For example, if a function might sometimes throw and sometimes reject, you don’t even have a single consistent way to catch all errors. This leads to weird bugs that only show up in certain runtime paths.
+
+```ts
+async function process() {
+  if (Math.random() > 0.5) {
+    throw new Error("Sync failure");
+  } else {
+    return Promise.reject("Async failure");
+  }
+}
+
+try {
+  await process(); // Might throw or reject
+} catch (e) {
+  console.error("Caught both sync or async error", e);
+}
+```
+
+---
+
+## The Big Picture
+
+Error handling in JavaScript was never designed for large, complex systems. It’s a system based on invisible behavior, informal rules, and fragile control flow.
+
+You often don’t know:
+- What will throw (or when),
+- What kind of thing will be thrown,
+- How to catch it reliably (especially in async flows),
+- Or what to do after catching it.
+
+It’s not that `try/catch` is bad in itself; It’s just not enough. And the more your application grows, the more these cracks start to show.
+
+---
+
+## Where This Leads Us
+
+So what do we do when error handling becomes unpredictable, messy, and impossible to reason about?
+
+We need a different way of thinking. One that makes failures *explicit*, predictable, and visible in the structure of our code.
+
+But before we dive into alternatives, let’s clear up a foundational idea: what’s the difference between an **error** and an **exception**, and why does it matter?

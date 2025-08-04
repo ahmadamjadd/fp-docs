@@ -1,0 +1,32 @@
+---
+title: .unwrapErr()
+description: Extract the error from a Result or throw if it's Ok.
+---
+
+The `.unwrapErr()` method is used when you expect a `Result` to contain an error and want to access the `Err` value directly. It is the inverse of `.unwrap()`.
+
+## Result.unwrapErr(): Get the Error Value
+
+When called on a `Result`, `.unwrapErr()` will return the value inside an `Err` if the `Result` is indeed an error. However, if the `Result` is actually an `Ok`, it will throw a runtime exception — making it unsafe in situations where the success case is possible.
+
+This method is useful in tests, debugging, or controlled flows where you know you're working with an error and want to access the error details directly.
+
+### Example
+
+```ts
+import { Option, Result } from '@carbonteq/fp';
+async function validateCreditCard(cardNumber: string): Promise<Result<string, Error>> {
+ // Simple check: must be 16 digits
+ return /^\d{16}$/.test(cardNumber)
+   ? Result.Ok(cardNumber)
+   : Result.Err(new Error("Invalid credit card number. Must be 16 digits."));
+}
+const res = await validateCreditCard("123456789012345"); // invalid
+res.isOk()
+ ? console.log(`✅ Valid credit card: ${res.unwrap()}`)
+ : console.error(`❌ Error: ${res.unwrapErr().message}`);
+ ```
+
+---
+
+Note that `.unwrapErr()` does not apply to `Option`. Since `Option` only holds a value or none at all, there is no error context to unwrap. If you need error information, use `Result` instead of `Option`.

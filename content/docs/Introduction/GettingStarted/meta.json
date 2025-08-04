@@ -1,0 +1,10 @@
+{
+    "title": "Getting Started",
+    "pages": [
+      "installation.mdx",
+      "primer.mdx",
+      "SyncCode.mdx",
+      "toPromise.mdx"
+    ]
+  }
+  

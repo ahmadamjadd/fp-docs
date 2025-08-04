@@ -1,0 +1,148 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-ui/css/dusk.css" layer(theme);
+@import "highlight.js/styles/atom-one-dark.css";
+
+/* Force syntax blocks to match Dusk theme variables */
+/* ✅ Apply custom light theme only in light mode */
+/* Override Inter font globally */
+.inter_59dee874-module__9CtR0q__className,
+[class*="inter_"] {  /* Targets all classes containing 'inter_' */
+  font-family: 'Avenir Next', sans-serif !important;
+  font-style: normal !important;
+}
+
+/* Optional: Set Roboto Slab for headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Roboto Slab', serif;
+}
+
+:root:not(.dark) {
+  --color-fd-border: #D2CE9F;         /* General border color */
+  --color-fd-border-strong: #2b2a2a;  /* Black for special cases like hr */
+
+  --tw-prose-hr: var(--color-fd-border-strong);
+  border-color: var(--color-fd-border-strong);
+
+  --color-fd-background: #E1DEB7;
+  --color-fd-surface: #E1DEB7;
+  --color-fd-card: #D2CE9F;
+  --color-fd-muted: #D2CE9F;
+  --color-fd-primary: #2b2a2a;
+  --color-fd-secondary: #FDF6E3;
+  --color-fd-accent: #E1DEB7;
+  --color-fd-foreground: #2b2a2a;
+  --color-fd-muted-foreground: #2b2a2a;
+}
+
+
+
+:root .hljs {
+  background: #fdf6e3 !important;
+  color: var(--color-fd-foreground);
+  border: none !important;
+  padding: 10;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.5;
+}
+
+:root.dark .hljs {
+  background: var(--color-fd-border) !important;
+  color: var(--color-fd-surface) !important;
+  border: 1px solid var(--color-fd-muted);
+}
+
+/* Apply strong borders ONLY in light mode */
+/* Light mode: Force strong borders EXCEPT for code blocks */
+:root:not(.dark) hr,
+:root:not(.dark) [class*='border']:not(pre):not(code):not(.hljs) {
+  border-color: var(--color-fd-border-strong) !important;
+}
+
+/* Light mode: Override ALL possible code block borders */
+/* Light mode: Override code block borders */
+/* Light mode: Override OUTER border (figure) and INNER border */
+:root:not(.dark) figure.shiki {
+  border: 1px solid var(--color-fd-border) !important; /* Explicitly sets outer border */
+}
+
+:root:not(.dark) figure.shiki > div[class*="border"] {
+  border-color: var(--color-fd-border) !important; /* Inner border (already working) */
+}
+
+
+/* Light mode: Active sidebar tab */
+/* Light mode: Active sidebar tab (left only) */
+:root:not(.dark) aside#nd-sidebar [data-active="true"] {
+  background-color: black !important;
+  color: white !important;
+}
+
+/* Left border accent */
+:root:not(.dark) aside#nd-sidebar [data-active="true"] .absolute.w-px {
+  background-color: white !important;
+}
+
+/* Only apply bottom border to the active tab */
+[data-state="active"],
+[aria-selected="true"] {
+  border-bottom: 2px solid var(--color-fd-border-strong); /* black in light, white in dark */
+}
+
+/* Optional: Add padding to prevent shift */
+.fumadocs-tabs-trigger {
+  padding-bottom: 0.5rem;
+}
+
+
+
+
+html:not(.dark) #nd-toc a[data-active="true"] {
+  color: black !important;
+  font-weight: 500;
+}
+
+html:not(.dark) #nd-toc a[data-active="false"] {
+  color: #666 !important;
+}
+
+html:not(.dark) #nd-toc [role="none"] {
+  background-color: black !important;
+}
+
+html:not(.dark) #nd-toc .border-s {
+  border-color: rgba(0, 0, 0, 0.05) !important; /* or #ddd */
+}
+
+
+
+#nd-sidebar svg {
+  stroke-width: 2.5 !important; /* default is 2 */
+}
+
+#nd-sidebar button[aria-expanded] {
+  font-weight: 600; /* reset first */
+}
+
+/* Make only top-level buttons bold */
+#nd-sidebar button[aria-expanded][style*="padding-inline-start:calc(var(--spacing) * 2)"] {
+  font-weight: 600;
+}
+figure.shiki {
+  border-color: var(--color-fd-border) !important;
+}
+figure.shiki.border {
+  border: 1px solid var(--color-fd-border) !important;
+}
+
+/* Bold parent tab headings in the sidebar */
+
+
+
+
+
+
+
+
+

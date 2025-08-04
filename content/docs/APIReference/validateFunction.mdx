@@ -1,0 +1,269 @@
+---
+title: .validate()
+description: Run multiple validators on a Result's value and collect all errors if any fail.
+---
+
+# Run Multiple Checks on a Result
+
+The `.validate()` method is used to apply several validation functions to the `Ok` value of a `Result`. These validation functions are called *validators*, and each one returns a new `Result`. If all validators succeed, the original `Result` continues as `Ok`. But if one or more validators fail, `.validate()` collects their error messages and transforms the `Result` into an `Err` containing an array of all the failures.
+
+This is especially useful when you want to apply a sequence of checks, like length, format, or character rules, on an input value before proceeding in a computation. Instead of nesting or chaining `.andThen()` calls and stopping at the first failure, `.validate()` allows you to gather *all* the reasons something is invalid at once.
+
+## How it works
+
+When `.validate()` is called on a `Result.Ok(value)`, it applies each validator function in sequence to the value. Each validator is a function that takes the value and returns either `Result.Ok` or `Result.Err`. If any of the validators return `Err`, the `.validate()` call itself becomes an `Err`, containing all error messages.
+
+This is ideal for input validation, form checks, or any situation where you need to enforce multiple rules and give full feedback on what went wrong.
+
+## Example
+
+```ts
+import { Result } from "@carbonteq/fp";
+function checkLength(username: string): Result<string, string> {
+ return username.length >= 8
+   ? Result.Ok(username)
+   : Result.Err("Username too short");
+}
+function noSpaces(username: string): Result<string, string> {
+ return username.includes(" ")
+   ? Result.Err("No spaces allowed")
+   : Result.Ok(username);
+}
+function noSpecialChars(username: string): Result<string, string> {
+ return /[^a-zA-Z0-9]/.test(username)
+   ? Result.Err("No special characters allowed")
+   : Result.Ok(username);
+}
+const username = "jo";
+const validated = Result.Ok(username).validate([
+ checkLength,
+ noSpaces,
+ noSpecialChars,
+]);
+validated.isOk()
+ ? console.log("Username is valid:", validated.safeUnwrap())
+ : console.log("Validation errors:", validated.unwrapErr());
+ ```
+
+---
+
+## Without and With Examples
+
+Let’s look at how you might validate a username using individual checks compared to using `.validate()` for clean, readable logic.
+
+<GoodBadCode
+  goodDescription="Using Carbonteq's `validate()` provides:"
+  goodPoints={[
+    "Parallel execution of all validators for better performance",
+    "Automatic aggregation of all validation errors"
+  ]}
+  badDescription="Manual validation leads to:"
+  badPoints={[
+    "Sequential execution that stops at first error",
+    "Manual error collection and state management"
+  ]}
+  goodCode={`import { Result } from "@carbonteq/fp";
+
+// Validation functions
+const minLength = (val: string) => 
+  val.length >= 8 ? Result.Ok(val) : Result.Err("Minimum 8 chars");
+
+const hasNumber = (val: string) =>
+  /\d/.test(val) ? Result.Ok(val) : Result.Err("Must contain number");
+
+const noSpaces = (val: string) =>
+  !val.includes(" ") ? Result.Ok(val) : Result.Err("No spaces allowed");
+
+// Parallel validation
+const validatePassword = (password: string) =>
+  Result.Ok(password).validate([minLength, hasNumber, noSpaces]);
+
+// Usage
+const result = validatePassword("weak");
+result.match({
+  Ok: val => console.log("Valid:", val),
+  Err: errs => console.log("Errors:", errs)
+});`}
+  badCode={`import { Result } from "@carbonteq/fp";
+
+// Validation functions (same as above)
+const minLength = (val: string) => /*...*/;
+const hasNumber = (val: string) => /*...*/;
+const noSpaces = (val: string) => /*...*/;
+
+// Sequential validation
+const validatePassword = (password: string) => {
+  const lengthCheck = minLength(password);
+  if (lengthCheck.isErr()) return lengthCheck;
+
+  const numberCheck = hasNumber(password);
+  if (numberCheck.isErr()) return numberCheck;
+
+  return noSpaces(password);
+};
+
+// Manual error collection alternative
+const validatePasswordAllErrors = (password: string) => {
+  const errors = [];
+  
+  const lengthCheck = minLength(password);
+  if (lengthCheck.isErr()) errors.push(lengthCheck.unwrapErr());
+  
+  const numberCheck = hasNumber(password);
+  if (numberCheck.isErr()) errors.push(numberCheck.unwrapErr());
+
+  const spaceCheck = noSpaces(password);
+  if (spaceCheck.isErr()) errors.push(spaceCheck.unwrapErr());
+
+  return errors.length > 0 
+    ? Result.Err(errors)
+    : Result.Ok(password);
+};`}
+  showViewButton={true}
+/>
+
+---
+
+## Exercise: Add Product Validation Using .validate()
+
+You’re building a form to add a new product to an inventory system. Each product needs to pass several checks before it can be accepted.
+
+Currently, the code applies each check one-by-one using `.andThen()`, which exits early on the first failure.  
+Your task is to rewrite the logic using `.validate()` so that **all checks are evaluated** and all error messages are collected at once.
+
+```ts
+import { Result } from "@carbonteq/fp";
+
+type Product = {
+  name: string;
+  price: number;
+  stock: number;
+};
+
+function checkName(name: string): Result<string, string> {
+  return name.trim() === ""
+    ? Result.Err("Name cannot be empty")
+    : Result.Ok(name);
+}
+
+function checkPrice(price: number): Result<number, string> {
+  return price > 0
+    ? Result.Ok(price)
+    : Result.Err("Price must be greater than 0");
+}
+
+function checkStock(stock: number): Result<number, string> {
+  return Number.isInteger(stock) && stock >= 0
+    ? Result.Ok(stock)
+    : Result.Err("Stock must be a non-negative integer");
+}
+
+const product = {
+  name: "",
+  price: -5,
+  stock: 10.5,
+};
+
+const result = checkName(product.name)
+  .andThen(() => checkPrice(product.price))
+  .andThen(() => checkStock(product.stock));
+
+result.isOk()
+  ? console.log("Product is valid!")
+  : console.log("Validation failed:", result.unwrapErr());
+```
+
+Rewrite this with `.validate()`
+
+<SandPack
+  code={`import { Result } from "@carbonteq/fp";
+
+type Product = {
+  name: string;
+  price: number;
+  stock: number;
+};
+
+function checkName(name: string): Result<string, string> {
+  return name.trim() === ""
+    ? Result.Err("Name cannot be empty")
+    : Result.Ok(name);
+}
+
+function checkPrice(price: number): Result<number, string> {
+  return price > 0
+    ? Result.Ok(price)
+    : Result.Err("Price must be greater than 0");
+}
+
+function checkStock(stock: number): Result<number, string> {
+  return Number.isInteger(stock) && stock >= 0
+    ? Result.Ok(stock)
+    : Result.Err("Stock must be a non-negative integer");
+}
+
+const product = {
+  name: "",
+  price: -5,
+  stock: 10.5,
+};
+
+const result = checkName(product.name)
+  .andThen(() => checkPrice(product.price))
+  .andThen(() => checkStock(product.stock));
+
+result.isOk()
+  ? console.log("Product is valid!")
+  : console.log("Validation failed:", result.unwrapErr());`}
+/>
+
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result } from "@carbonteq/fp";
+
+type Product = {
+  name: string;
+  price: number;
+  stock: number;
+};
+
+function checkName(name: string): Result<string, string> {
+  return name.trim() === ""
+    ? Result.Err("Name cannot be empty")
+    : Result.Ok(name);
+}
+
+function checkPrice(price: number): Result<number, string> {
+  return price > 0
+    ? Result.Ok(price)
+    : Result.Err("Price must be greater than 0");
+}
+
+function checkStock(stock: number): Result<number, string> {
+  return Number.isInteger(stock) && stock >= 0
+    ? Result.Ok(stock)
+    : Result.Err("Stock must be a non-negative integer");
+}
+
+const product = {
+  name: "",
+  price: -5,
+  stock: 10.5,
+};
+
+const validated = Result.Ok(product).validate([
+  (p) => checkName(p.name),
+  (p) => checkPrice(p.price),
+  (p) => checkStock(p.stock),
+]);
+
+validated.isOk()
+  ? console.log("Product is valid!")
+  : console.log("Validation errors:", validated.unwrapErr());`}
+/>
+
+---
+
+
+> **Note:** `.validate()` is a method exclusive to `Result` and is not available on `Option`. It is specifically designed for cases where multiple validations need to be run on a successful value before moving on.

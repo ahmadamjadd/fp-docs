@@ -1,0 +1,69 @@
+---
+title: .toString()
+description: Get a string representation of Result or Option values
+---
+
+## String Representation
+
+The `.toString()` method provides a human-readable string representation of `Result` and `Option` values, primarily useful for debugging and logging purposes.
+
+---
+
+## Result.toString()
+
+For `Result` types, the method returns:
+- `"Ok(value)"` when the result contains a success value
+- `"Err(error)"` when the result contains an error
+
+The output includes the stringified representation of the contained value or error.
+
+```ts
+import {Result} from '@carbonteq/fp';
+const registrationResult = Result.Ok("User registered successfully");
+console.log(registrationResult.toString());
+```
+
+### Characteristics
+- Preserves the Ok/Err distinction in output
+- Includes the actual value in the string
+- Safe to call on any Result instance
+
+---
+
+## Option.toString()
+
+For `Option` types, the method returns:
+- `"Option::Some(value)"` when containing a value
+- `"Option::None"` when empty
+
+The Some case includes the string representation of the contained value.
+
+```ts
+import { Option } from "@carbonteq/fp";
+const userThemeSetting = Option.Some("Dark Mode");
+const missingLanguageSetting = Option.None;
+console.log("Theme Setting:", userThemeSetting.toString());
+// Output → Theme Setting: Option::Some(Dark Mode)
+console.log("Language Setting:", missingLanguageSetting.toString());
+// Output → Language Setting: Option::None
+```
+
+### Characteristics
+- Clearly indicates the Option type in output
+- Differentiates between Some and None states
+- Useful for quick debugging inspections
+
+---
+
+## When to Use
+- Debugging complex chains of operations
+- Logging state in production
+- Displaying intermediate values during development
+- Creating user-friendly error reports
+
+---
+
+## Limitations
+- Not meant for production string manipulation
+- Output format may change in future versions
+- Doesn't provide customization options

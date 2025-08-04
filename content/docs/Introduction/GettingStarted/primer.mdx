@@ -1,0 +1,51 @@
+---
+title: Functors & Monads Primer
+description: Learn the basic concepts of Functors and Monads before diving into functional programming with Carbonteq FP.
+---
+Before we explore functional programming in action, let’s take a quick look at two key concepts that show up everywhere in this library: **functors** and **monads**.
+
+Don’t worry — you don’t need a math degree to understand these! We'll explain them in plain English.
+
+---
+
+## What is a Functor?
+
+A **functor** is just a container, a box that holds a value, along with the ability to apply a function to that value.
+
+Think of it like this:
+
+> _"If I give you a gift-wrapped toy and a set of instructions to decorate it, a functor lets you decorate the toy._
+
+In programming terms, a functor is any structure that supports a transformation operation — often called `map` — allowing you to work with the value inside, while preserving the context.
+
+---
+
+## What is a Monad?
+
+A **monad** is extension of a functor, but more powerful.
+
+It not only lets you transform values inside a container, but also **chain computations that themselves return containers**. This is often referred to as `flatMap` or `bind`.
+
+You can think of monads as **pipelines for computation** where each step manages its own context, whether that context is an error, a missing value, or something else.
+
+This makes monads incredibly useful when you're writing code that deals with:
+
+- Operations that can fail
+- Optional or missing values
+- Asynchronous computations
+- Sequences of dependent steps
+
+---
+
+## Monads in Carbonteq FP
+
+In Carbonteq FP, you’ll be working with two important monads:
+
+- [`Result`](/docs/BuildingBlocks/Result/WhatResult): represents a value that can be a success or a failure.
+- [`Option`](/docs/BuildingBlocks/Option/WhatOption): represents a value that may exist or be missing (some or none).
+
+These are your **core building blocks** for writing clean, declarative, and robust functional code.
+
+We'll explore each of them in detail in their own dedicated sections, with examples, use-cases, and interactive exercises.
+
+---

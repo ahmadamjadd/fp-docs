@@ -1,0 +1,201 @@
+---
+title: .flatZip()
+description: Combine two Results or Options where the second operation may also fail, using .flatZip().
+---
+
+# Combining Dependent Computations
+
+In functional programming, chaining operations that might fail is a common pattern, especially when the second operation depends on the result of the first. That’s where `.flatZip()` comes in. It's designed to work just like `.zip()`, but it supports mappers that return another `Result` or `Option`. This makes it ideal for combining two operations where **both might fail**, and you want to capture both values if successful.
+
+---
+
+## Result.flatZip(): Combine Two Results (Where Second Might Fail)
+
+`.flatZip()` for `Result` allows you to zip two computations where the second one returns a `Result` itself. If both succeed, you get an `Ok` containing a tuple of values. But if either fails, the error is propagated.
+
+This is useful when you want to combine two fallible computations, where the second step depends on the first.
+
+### How it works:
+
+If the original result is `Ok`, the function is called.  
+If that function returns `Ok`, both values are combined as a tuple.  
+If the function returns `Err`, the error is propagated.  
+If the original is already `Err`, the function is skipped and that error is returned.
+
+### Example
+
+```ts
+import { Result } from "@carbonteq/fp";
+const getUserName = (): Result<string, string> => {
+ return false ? Result.Ok("Ahmad") : Result.Err("John");
+};
+const fetchUserProfile = (name: string): Result<string, string> => {
+ if (name === "Ahmad") {
+   return Result.Ok(`Profile of ${name}`);
+ }
+ return Result.Err("Profile Not Found");
+};
+const result = getUserName().flatZip(fetchUserProfile);
+console.log(result.toString());
+```
+
+---
+
+## Option.flatZip(): Combine Options (Where Second Returns Option)
+
+`.flatZip()` also works on `Option`, but expects the mapper function to return another `Option`. This allows you to combine two optional values where the second depends on the first, and gracefully handle the absence of values at any stage.
+
+If either the original `Option` is `None`, or the returned `Option` is `None`, the final result is also `None`. If both exist, the combined tuple is wrapped in a `Some`.
+
+This pattern is great for chaining optional computations.
+
+### Example
+
+```ts
+import { Option } from "@carbonteq/fp";
+// Fake function: Fetch email by userId, but could fail
+function getUserEmail(userId: number): Option<string> {
+ if (userId === 1) return Option.Some("john@example.com");
+ return Option.None;
+}
+const userId = Option.Some(1);
+const userWithEmail = userId.flatZip(getUserEmail);
+console.log(userWithEmail.safeUnwrap()); 
+// Output → [1, "john@example.com"]
+```
+
+---
+
+## Without and With Examples
+
+Let’s compare an imperative version of two chained operations with the declarative style of `.flatZip()`.
+
+<GoodBadCode
+  goodDescription="Using `flatZip()` provides:"
+  goodPoints={[
+    "Clean combination of two independent operations",
+    "Automatic error propagation if either operation fails"
+  ]}
+  badDescription="Manual combination requires:"
+  badPoints={[
+    "Nested conditional checks for each operation",
+    "Explicit error handling and propagation"
+  ]}
+  goodCode={`import { Option } from "@carbonteq/fp";
+
+const userId = Option.Some(1);
+const userEmail = Option.Some("user@example.com");
+
+// Combine with flatZip
+const combined = userId.flatZip(() => userEmail);
+// Returns Option<[number, string]>`}
+  badCode={`import { Option } from "@carbonteq/fp";
+
+const userId = Option.Some(1);
+const userEmail = Option.Some("user@example.com");
+
+// Manual combination
+let combined;
+if (userId.isSome() && userEmail.isSome()) {
+  combined = Option.Some([userId.unwrap(), userEmail.unwrap()]);
+} else {
+  combined = Option.None;
+}`}
+  showViewButton={true}
+/>
+
+---
+
+## Exercise: Refactor with .flatZip()
+
+You’re given two functions. One returns a `Result`, and another returns a `Result` or `Option` depending on input.  
+Try rewriting the code using `.flatZip()` to simplify the logic and capture both values only when both steps succeed.
+
+```ts
+import { Result } from "@carbonteq/fp";
+
+const getUserName = (): Result<string, string> => {
+  return false ? Result.Ok("Ahmad") : Result.Err("No user found");
+};
+
+const fetchUserProfile = (name: string): Result<string, string> => {
+  return name === "Ahmad"
+    ? Result.Ok(`Profile of ${name}`)
+    : Result.Err("Profile not found");
+};
+
+const nameResult = getUserName();
+
+let finalResult: Result<[string, string], string>;
+
+if (nameResult.isOk()) {
+  const profileResult = fetchUserProfile(nameResult.unwrap());
+  if (profileResult.isOk()) {
+    finalResult = Result.Ok([nameResult.unwrap(), profileResult.unwrap()]);
+  } else {
+    finalResult = profileResult;
+  }
+} else {
+  finalResult = nameResult;
+}
+
+console.log(finalResult.toString());
+```
+
+Try rewriting the code using `.flatZip()` to simplify the logic and capture both values only when both steps succeed.
+
+<SandPack
+  code={`import { Result } from "@carbonteq/fp";
+
+const getUserName = (): Result<string, string> => {
+  return false ? Result.Ok("Ahmad") : Result.Err("No user found");
+};
+
+const fetchUserProfile = (name: string): Result<string, string> => {
+  return name === "Ahmad"
+    ? Result.Ok(\`Profile of \${name}\`)
+    : Result.Err("Profile not found");
+};
+
+const nameResult = getUserName();
+
+let finalResult: Result<[string, string], string>;
+
+if (nameResult.isOk()) {
+  const profileResult = fetchUserProfile(nameResult.unwrap());
+  if (profileResult.isOk()) {
+    finalResult = Result.Ok([nameResult.unwrap(), profileResult.unwrap()]);
+  } else {
+    finalResult = profileResult;
+  }
+} else {
+  finalResult = nameResult;
+}
+
+console.log(finalResult.toString());`}
+/>
+
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result } from "@carbonteq/fp";
+
+const getUserName = (): Result<string, string> => {
+  return false ? Result.Ok("Ahmad") : Result.Err("No user found");
+};
+
+const fetchUserProfile = (name: string): Result<string, string> => {
+  return name === "Ahmad"
+    ? Result.Ok(\`Profile of \${name}\`)
+    : Result.Err("Profile not found");
+};
+
+const finalResult = getUserName().flatZip(fetchUserProfile);
+
+console.log(finalResult.toString());`}
+/>
+
+
+---
+
+Whether you're working with `Result` or `Option`, `.flatZip()` offers a clean way to combine two dependent computations — but only when both succeed.

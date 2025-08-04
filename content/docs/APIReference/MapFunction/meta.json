@@ -1,0 +1,10 @@
+{
+    "title": ".map()",
+    "pages": [
+        "flatmap.mdx",
+        "mapOr_mapErr.mdx",
+        "mapBoth.mdx"
+      
+    ]
+  }
+  

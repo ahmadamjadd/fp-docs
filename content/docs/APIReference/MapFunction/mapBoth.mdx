@@ -1,0 +1,129 @@
+---
+title: .mapBoth()
+description: Transform both success and error cases simultaneously using mapBoth.
+---
+
+The `.mapBoth()` function provides a unified way to handle both success and error cases of a Result type in a single operation. Unlike handling each case separately with `.map()` and `.mapErr()`, this method allows you to define transformations for both scenarios in one cohesive expression. This approach leads to cleaner code where the relationship between success and error handling remains visually and logically connected.
+
+---
+
+## Why Use `mapBoth`?
+
+When working with operations that can fail, we often need to prepare both successful results and errors for presentation or further processing. Traditional approaches require separate handling of these cases, which can scatter related logic across different parts of the code. The `mapBoth` function solves this by giving you a single point of control where you can define how to transform values in either case. This becomes particularly valuable when you want to ensure consistent formatting or enrichment of both success and error outcomes, such as when preparing data for API responses or user interfaces. The method helps maintain symmetry in your error handling strategy while reducing boilerplate code.
+
+---
+
+## How It Works with `Result`
+
+The `mapBoth` function operates on Result types by accepting two transformation functions. The first function handles successful values wrapped in Ok, while the second handles error values wrapped in Err. When applied to a Result, it examines the contained value and applies the appropriate transformation while preserving the Result container. This behavior creates a new Result with the transformed value, maintaining the original Ok/Err state but with updated content. The transformation happens in a single step, keeping the code focused and making it clear that both cases are related parts of the same logical operation.
+
+
+
+---
+
+## Practical Applications
+
+In real-world applications, `mapBoth` shines when you need to maintain consistency between success and error paths. For API development, it helps format responses to ensure clients receive similarly structured data regardless of outcome. When working with error reporting, it allows enriching error objects with contextual information while simultaneously processing successful data. The method also proves valuable for logging scenarios where you want to ensure both successes and failures get tagged with consistent metadata. In UI programming, it enables transforming raw data into view models while simultaneously converting technical errors into user-friendly messages, all within the same logical operation.
+
+---
+
+## Example: Without and With `mapBoth`
+
+<GoodBadCode
+  goodDescription="Using mapBoth provides:"
+  goodPoints={[
+    "Single operation handling both success and error cases together",
+    "Clear visual connection between related transformations"
+  ]}
+  badDescription="Separate handling causes:"
+  badPoints={[
+    "Fragmented logic with separate map and mapErr calls",
+    "Obscured relationship between success/error handling"
+  ]}
+  goodCode={`import { Result } from "@carbonteq/fp";
+
+// Format both success and error cases in one operation
+const formatted = apiResult.mapBoth(
+  data => ({ status: "success", data }),
+  error => ({ status: "error", message: error.message })
+);`}
+  badCode={`import { Result } from "@carbonteq/fp";
+
+// Separate handling requires multiple operations
+let formatted;
+if (apiResult.isOk()) {
+  formatted = { status: "success", data: apiResult.unwrap() };
+} else {
+  const error = apiResult.unwrapErr();
+  formatted = { status: "error", message: error.message };
+}`}
+  showViewButton={true}
+/>
+
+---
+
+## Best Practices
+
+To get the most value from `mapBoth`, keep your transformation functions focused and pure. The two handlers should operate at similar levels of abstraction to maintain code clarity. This method works best for presentation-layer transformations rather than core business logic. When using TypeScript, pay attention to the type relationships between your success and error transformations to ensure type safety throughout your application. The function works particularly well when you need to establish consistent patterns for how your application handles both positive and negative outcomes.
+
+---
+
+## Performance Characteristics
+
+The `mapBoth` function adds negligible overhead compared to handling cases separately. The implementation is optimized to create only necessary new objects, with no additional allocations beyond what the transformation functions themselves require. The method is safe to use in performance-sensitive code paths, as it introduces minimal computational cost while providing significant organizational benefits to your codebase.
+
+---
+
+## Exercise: Refactor Using `mapBoth`
+
+Consider this scenario where success and error cases are handled separately:
+
+```ts
+import { Result } from "@carbonteq/fp";
+
+function processResponse(response: Result<string, Error>): Result<string, string> {
+  if (response.isOk()) {
+    const data = response.unwrap();
+    return Result.Ok(`Processed: ${data.toUpperCase()}`);
+  } else {
+    const err = response.unwrapErr();
+    return Result.Err(`Failed: ${err.message}`);
+  }
+}
+```
+Rewrite this using `mapBoth`
+
+<SandPack
+  code={`import { Result } from "@carbonteq/fp";
+
+function processResponse(response: Result<string, Error>): Result<string, string> {
+  if (response.isOk()) {
+    const data = response.unwrap();
+    return Result.Ok(\`Processed: \${data.toUpperCase()}\`);
+  } else {
+    const err = response.unwrapErr();
+    return Result.Err(\`Failed: \${err.message}\`);
+  }
+}`}
+/>
+
+
+
+import { highlight } from "@/components/highlightcode";
+import AnswerDialog from "@/components/AnswerDialog"
+
+<AnswerDialog
+  title="Answer"
+  code={`import { Result } from '@carbonteq/fp';
+
+function processResponse(response: Result<string, Error>): Result<string, string> {
+  if (response.isOk()) {
+    const data = response.unwrap();
+    return Result.Ok(\`Processed: \${data.toUpperCase()}\`);
+  } else {
+    const err = response.unwrapErr();
+    return Result.Err(\`Failed: \${err.message}\`);
+  }
+}`}
+/>
+

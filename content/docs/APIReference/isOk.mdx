@@ -1,0 +1,35 @@
+---
+title: .isOk()
+description: Check if a Result is in the success (Ok) state.
+---
+
+## Check for Success State
+
+The `.isOk()` method checks whether a `Result` is in the success state. It returns a boolean value that indicates if the result contains an `Ok` value, allowing for type-safe branching in your code.
+
+---
+
+## How It Works
+
+When called on a `Result`:
+
+- Returns `true` if the result is `Ok(value)`
+- Returns `false` if the result is `Err(error)`
+
+In TypeScript, using `.isOk()` in a conditional statement will automatically narrow the type, giving you type-safe access to the contained value.
+
+### Example: Basic Usage
+
+```ts
+import { Result } from '@carbonteq/fp';
+
+const result = Result.Ok("Data loaded successfully");
+
+if (result.isOk()) {
+  // TypeScript knows 'result' is Ok here
+  console.log("Success:", result.unwrap());
+} else {
+  // TypeScript knows 'result' is Err here
+  console.error("Error:", result.unwrapErr());
+}
+```

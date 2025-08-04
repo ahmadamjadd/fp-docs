@@ -1,0 +1,80 @@
+---
+title: Expected vs Unexpected Errors
+description: Understand the crucial difference between expected and unexpected errors in programming.
+---
+
+# Two Types of Errors
+
+Every program deals with two fundamentally different kinds of failures:
+
+## Expected Errors
+These are failures we anticipate and design for:
+- Validation failures
+- Network timeouts
+- Permission issues
+- Business rule violations
+
+They represent normal program flow and should be:
+- Explicit in type signatures
+- Documented in APIs
+- Handled deliberately
+
+```ts
+// Expected failure - API response
+function fetchUser(id: string): Result<User, "NotFound" | "NetworkError"> {
+  try {
+    const user = await api.get(`/users/${id}`);
+    return Result.Ok(user);
+  } catch (e) {
+    return e.status === 404 
+      ? Result.Err("NotFound")
+      : Result.Err("NetworkError");
+  }
+}
+
+// Usage (must handle both cases)
+fetchUser("123").match({
+  Ok: user => renderProfile(user),
+  Err: error => showErrorToast(error) // "NotFound" | "NetworkError"
+});
+```
+
+## Unexpected Errors
+These represent genuine system defects:
+- Type coercion failures
+- Assertion violations
+- Critical resource exhaustion
+
+They indicate:
+- Bugs rather than normal cases
+- Conditions we can't reasonably recover from
+- Problems outside expected behavior
+```ts
+// Unexpected failure - programming error
+function calculateDiscount(price: number): number {
+  // No type checking - could throw if price is null/undefined
+  return price * 0.15; 
+}
+
+// Usage (no compiler enforcement)
+try {
+  calculateDiscount(null); // Throws TypeError
+} catch (e) {
+  // This catch is optional and not type-checked
+  logCrash(e);
+}
+```
+
+## Why the Distinction Matters
+
+1. **Clearer Code**  
+   Separates normal failures from actual bugs
+
+2. **Better Reliability**  
+   Forces handling of anticipated cases
+
+3. **Cleaner Architecture**  
+   Isolates recoverable vs unrecoverable paths
+
+
+**Carbonteq FP provides tools to handle expected errors effectively, as we'll explore in this documentation.**

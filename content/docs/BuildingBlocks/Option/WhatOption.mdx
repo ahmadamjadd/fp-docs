@@ -1,0 +1,112 @@
+---
+title: What is Option?
+description: Understand the Option type and how it models the presence or absence of a value in a safe way.
+---
+
+# What is `Option`?
+
+In functional programming, handling values that may or may not exist is a common challenge. Traditionally, many programming languages deal with this using `null` or `undefined`, which often leads to runtime errors when developers forget to handle these edge cases properly. This is where the `Option` type comes into play.
+
+The `Option` type is a safer and more expressive alternative for representing optional or missing values. Instead of relying on `null` or `undefined`, an `Option<T>` explicitly states: a value is either **present** (`Some`) or **absent** (`None`).
+
+```ts
+import { Option, some, none } from "carbonteq-fp"
+
+const name: Option<string> = some("Ahmad")
+const missingName: Option<string> = none()
+```
+
+## Why Use Option?
+
+Using `Option` enforces you to **handle both scenarios**: the presence and absence of a value at compile time. This makes your code safer and reduces the chances of unexpected crashes due to unhandled null values. It also encourages a more declarative and readable coding style.
+
+```ts
+// Without Option
+function getUserAge(user: { age?: number }): number {
+  return user.age! + 1 // can crash if age is undefined
+}
+
+// With Option
+function getUserAgeSafe(user: Option<number>): number {
+  return user.match({
+    some: (age) => age + 1,
+    none: () => 0,
+  })
+}
+```
+
+## The Two Faces of Option
+
+The `Option` type typically has two variants:
+
+- **Some**: Wraps an actual value, meaning the computation or lookup succeeded and returned something.
+- **None**: Represents the absence of a value: the operation did not yield any result.
+
+```ts
+const maybeValue: Option<number> = some(42)
+
+maybeValue.match({
+  some: (val) => console.log("We got:", val),
+  none: () => console.log("No value found."),
+})
+
+const nothingHere: Option<number> = none()
+
+nothingHere.match({
+  some: (val) => console.log("We got:", val),
+  none: () => console.log("No value found."),
+})
+```
+
+Instead of using `if` checks or `null` comparisons scattered throughout your codebase, `Option` encourages clear and predictable handling using pattern matching or combinator functions like `map`, `flatMap`, and `match`.
+
+## Option in Carbonteq FP
+
+In the Carbonteq FP library, `Option<T>` is provided as a core building block for functional composition. It integrates well with other constructs like `Result` and helps eliminate entire categories of runtime errors related to missing data.
+
+We'll explore how to work with `Option`, how to transform values inside it, how to compose operations, and how to convert between `Option` and `Result` in upcoming sections.
+
+You can continue to the next section to learn more about `Some` and `None` in action, and later try interactive examples and exercises to strengthen your understanding.
+
+
+## Example: Without and With Option
+
+<GoodBadCode
+  goodDescription="Using Option provides:"
+  goodPoints={[
+    "Explicit handling of missing values",
+    "Type-safe operations without null checks"
+  ]}
+  badDescription="Without Option leads to:"
+  badPoints={[
+    "Implicit null returns that are easy to miss",
+    "Manual null checks scattered through code"
+  ]}
+  goodCode={`import { Option } from "@carbonteq/fp";
+
+function findUser(id: number): Option<string> {
+  const db = new Map([[1, "Alice"], [2, "Bob"]]);
+  return Option.fromNullable(db.get(id));
+}
+
+// Safe operations chain
+findUser(1)
+  .map(name => name.toUpperCase())
+  .match({
+    Some: name => console.log("Found:", name),
+    None: () => console.log("User not found")
+  });`}
+  badCode={`function findUser(id: number): string | null {
+  const db = new Map([[1, "Alice"], [2, "Bob"]]);
+  return db.get(id) ?? null;
+}
+
+// Manual null checks required
+const user = findUser(3);
+if (user !== null) {
+  console.log("Found:", user.toUpperCase());
+} else {
+  console.log("User not found");
+}`}
+  showViewButton={true}
+/>

@@ -1,0 +1,75 @@
+---
+title: Installation Guide
+description: Install and set up Carbonteq FP in your TypeScript project.
+icon: PackageIcon
+---
+
+This guide will help you install and set up `@carbonteq/fp` in your TypeScript project.
+
+---
+
+## Install Carbonteq FP
+
+You can install Carbonteq FP using your preferred package manager:
+
+```bash
+# npm
+npm install @carbonteq/fp
+
+# pnpm
+pnpm add @carbonteq/fp
+
+# yarn
+yarn add @carbonteq/fp
+
+# bun
+bun add @carbonteq/fp
+```
+
+---
+
+## TypeScript Configuration
+
+To properly use Carbonteq FP, you'll need to configure your TypeScript project. Create or update your tsconfig.json with these settings:
+
+```bash
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  }
+}
+```
+---
+
+## Example package.json
+
+Here’s a minimal setup if you’re starting a fresh project:
+
+```bash
+{
+  "type": "module",
+  "scripts": {
+    "dev": "tsx test.ts",
+    "build": "tsc test.ts",
+    "run:ts": "tsc"
+  },
+  "dependencies": {
+    "@carbonteq/fp": "^0.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.8",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3"
+  }
+}
+```
+
+---

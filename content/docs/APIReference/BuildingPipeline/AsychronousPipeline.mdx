@@ -1,0 +1,260 @@
+---
+title: Asynchronous Pipeline
+description: Build a complete async registration flow using Result and .validate.
+---
+
+# Asynchronous Pipeline
+
+In this section, we’ll explore how to build a fully asynchronous pipeline using the `Result` type, `validate()`, and `flatMap()` with `toPromise()`.
+
+This pattern is especially useful in scenarios like user registration, where each step might involve asynchronous checks, such as checking the availability of an email or sending a verification email.
+
+## Scenario
+
+Imagine you're registering a user. Your pipeline will:
+
+- Validate the user's email format (sync)
+- Check if the email is already registered (async)
+- Validate password strength (sync)
+- Create a new user profile (async)
+- Send a verification email (async)
+
+Each step returns a `Result`, and the full pipeline is composed using functional methods.
+
+## Step-by-Step Breakdown
+
+We begin by wrapping the user input using `Result.Ok(input)`, initiating the pipeline.
+
+### 1. `.validate(...)`
+
+This step applies both synchronous and asynchronous validation functions. These guards check for:
+
+- Proper email format
+- Email availability (async)
+- Password strength
+
+If any of these validations fail, the pipeline short-circuits and returns an error immediately.
+
+### 2. `.flatMap(...)`
+
+After the input is validated, we move on to creating the user profile. This is an asynchronous operation that returns a `Result`, so we use `.flatMap()` to continue chaining without nesting.
+
+### 3. `.flatMap(...)` (again)
+
+Next, we pass the newly created profile to another async function: sending a verification email. This step is also chained using `.flatMap()` to keep the Result wrapping consistent.
+
+### 4. `.toPromise()`
+
+Since the entire chain involves asynchronous operations, we finalize the pipeline with `.toPromise()`. This resolves the composed `Result` into a `Promise<Result<...>>` so it can be awaited.
+
+This approach gives you full control over both success and failure paths in asynchronous flows, while preserving the benefits of functional chaining.
+
+
+## Full Example
+
+```ts
+import { matchRes } from "@/match.js";
+import { Result } from "@/result.js";
+
+interface UserInput {
+  email: string;
+  password: string;
+  name: string;
+}
+
+interface UserProfile {
+  userId: string;
+  email: string;
+  name: string;
+  verificationStatus: "pending" | "verified";
+}
+
+// Validate email format (synchronous)
+function guardEmail(email: string): Result<string, string> {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email)
+    ? Result.Ok(email)
+    : Result.Err("Invalid email format");
+}
+
+// Check if email is already registered
+async function guardEmailAvailability(
+  email: string,
+): Promise<Result<string, string>> {
+  // Simulate database check
+  await Promise.resolve(email);
+  const registeredEmails = ["existing@example.com"];
+  return !registeredEmails.includes(email)
+    ? Result.Ok(email)
+    : Result.Err("Email already registered");
+}
+
+// Validate password strength (synchronous)
+function guardPassword(password: string): Result<string, string> {
+  return password.length >= 8
+    ? Result.Ok(password)
+    : Result.Err("Password must be at least 8 characters");
+}
+
+// Create user profile
+async function createUserProfile(
+  input: UserInput,
+): Promise<Result<UserProfile, string>> {
+  const userProfile: UserProfile = {
+    userId: `USER-${Date.now()}`,
+    email: input.email,
+    name: input.name,
+    verificationStatus: "pending",
+  };
+  return Result.Ok(userProfile);
+}
+
+// Send verification email
+async function sendVerificationEmail(
+  profile: UserProfile,
+): Promise<Result<UserProfile, string>> {
+  // Simulate email sending and verification
+  await Promise.resolve(profile);
+  console.log(`Verification email sent to ${profile.email}`);
+  return Result.Ok(profile);
+}
+
+// Main registration pipeline
+async function registerUser(
+  input: UserInput,
+): Promise<Result<UserProfile, string | string[]>> {
+  const res = await Result.Ok(input)
+    .validate([
+      // handles both sync and async functions
+      ({ email }) => guardEmail(email),
+      ({ email }) => guardEmailAvailability(email),
+      ({ password }) => guardPassword(password),
+    ])
+    .flatMap(createUserProfile)
+    .flatMap(sendVerificationEmail)
+    .toPromise();
+
+  return res;
+}
+
+// Usage
+async function main() {
+  const userInput: UserInput = {
+    email: "newuser@example.com",
+    password: "securepass123",
+    name: "John Doe",
+  };
+
+  const result = await registerUser(userInput);
+
+  matchRes(result, {
+    Ok: (profile) => {
+      console.log(`Email: ${profile.email}`);
+      console.log("Registration successful!");
+      console.log(`User ID: ${profile.userId}`);
+      console.log(`Verification Status: ${profile.verificationStatus}`);
+    },
+    Err: (error) => {
+      console.error(`Registration failed: ${error}`);
+    },
+  });
+}
+
+main();
+// Output:
+// Verification email sent to newuser@example.com
+// Email: newuser@example.com
+// Registration successful!
+// User ID: USER-1737921964102
+// Verification Status: pending
+```
+
+## Explanation
+
+We start with a synchronous `Result.Ok(input)`, and then use `.validate()` to apply multiple guards, including both synchronous and asynchronous validators. 
+
+The key part is the use of `.toPromise()` at the end of the chain. It resolves the final Result once all async operations are completed.
+
+This structure ensures:
+
+- Clear separation of concerns between validation and side effects
+- Safe and readable chaining of async operations
+- Consistent error handling across both sync and async boundaries
+
+## Exercise: Build Your Own Async Flow
+
+Try modeling a password reset pipeline:
+
+- Validate the email format
+- Confirm user exists for that email
+- Generate a temporary reset token
+- Send the token to the user's email
+
+Use:
+
+- `Result.Ok()`
+- `.validate(...)`
+- `.flatMap(...)`
+- `.map(...)`
+- `.toPromise()`
+
+<SandPack
+  code={`\\ Write here`}
+/>
+
+<AnswerDialog
+  title="Sample Solution"
+  code={`import { Result } from "@carbonteq/fp"
+
+interface PasswordResetInput {
+  email: string
+}
+
+interface ResetToken {
+  email: string
+  token: string
+}
+
+// Step 1: Validate email format
+function validateEmail(input: PasswordResetInput): Result<PasswordResetInput, string> {
+  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(input.email)
+    ? Result.Ok(input)
+    : Result.Err("Invalid email format")
+}
+
+// Step 2: Check if user exists (async)
+async function checkUserExists(input: PasswordResetInput): Promise<Result<PasswordResetInput, string>> {
+  const knownEmails = ["alice@example.com", "bob@example.com"]
+  await Promise.resolve()
+  return knownEmails.includes(input.email)
+    ? Result.Ok(input)
+    : Result.Err("No account found for this email")
+}
+
+// Step 3: Generate reset token
+async function generateResetToken(input: PasswordResetInput): Promise<Result<ResetToken, string>> {
+  await Promise.resolve()
+  return Result.Ok({
+    email: input.email,
+    token: "RESET-" + Date.now(),
+  })
+}
+
+// Compose the async pipeline
+async function handlePasswordReset(input: PasswordResetInput): Promise<Result<ResetToken, string>> {
+  return Result.Ok(input)
+    .validate([validateEmail, checkUserExists])
+    .flatMap(generateResetToken)
+    .toPromise()
+}
+
+// Usage
+const result = await handlePasswordReset({ email: "alice@example.com" })
+
+if (result.isOk()) {
+  console.log("Token sent to:", result.unwrap().email)
+  console.log("Token:", result.unwrap().token)
+} else {
+  console.error("Error:", result.unwrapErr())
+}`}
+/>

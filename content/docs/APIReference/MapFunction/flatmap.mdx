@@ -1,0 +1,233 @@
+---
+title: .flatMap()
+description: Chain multiple transformations with built-in error handling using flatMap.
+---
+
+In functional programming, we often deal with operations that can fail. The `flatMap` function lets you **chain** such operations cleanly. Unlike `map`, which transforms a value inside a container, `flatMap` expects the transformation itself to return another container like `Result` or `Option`.
+
+This avoids nested structures like `Result<Result<T, E>, E>` or `Option<Option<T>>` and allows you to compose complex logic step by step.
+
+---
+
+## Why Use `flatMap`?
+
+Let’s say you're performing a series of operations like:
+
+1. Parsing a string
+2. Validating a number
+3. Fetching data based on it
+
+Each of these steps could fail. Using `flatMap` allows you to:
+
+- Pass the output of one step directly into the next
+- Stop the chain early if a step fails
+- Avoid deep nesting and manual error checks
+
+It helps you **compose failure-prone logic** in a safe and elegant way.
+
+---
+
+## How It Works with `Result`
+
+When you use `flatMap` on a `Result`, it behaves like this:
+
+- If the result is `Ok(value)`, it runs your function which should return another `Result`.
+- If the result is `Err`, the function is **not run**, and it simply returns the same `Err`.
+
+This ensures that only successful paths proceed and any failure halts further computation.
+
+### Example
+
+```ts
+import { Result, Ok, Err } from "@carbonteq/fp"
+
+async function isAdult(age: string): Promise<Result<number, Error>> {
+  const result = await Promise.resolve(Ok(age))
+    .then((res) => res
+      .map((str) => parseInt(str, 10))
+      .flatMap((num) =>
+        num > 18
+          ? Ok(num)
+          : Err(new Error("You cannot enter!!"))
+      )
+    )
+
+  return result
+}
+
+const res = await isAdult("12")
+
+res.match({
+  Ok(age) {
+    console.log("Allowed! Age:", age)
+  },
+  Err(error) {
+    console.error("Error:", error.message)
+  }
+})
+```
+
+---
+
+## How It Works with `Option`
+
+With `Option`, `flatMap` allows you to chain operations that may or may not return a value.
+
+- If the option is `Some(value)`, it runs your function and expects another `Option` in return.
+- If it’s `None`, it stays `None` and skips your function entirely.
+
+This is extremely useful when each step could return `None`, and you want to propagate that absence without extra checks.
+
+### Example
+
+```ts
+import { Option } from "@carbonteq/fp"
+
+function getUserNickname(userId: string): Option<string> {
+  const nicknames: Record<string, string> = {
+    user123: "Ace",
+    user456: "Bo"
+  }
+
+  const nickname = nicknames[userId]
+  return nickname ? Option.Some(nickname) : Option.None
+}
+
+function validateNicknameLength(nickname: string): Option<string> {
+  return nickname.length >= 3 ? Option.Some(nickname) : Option.None
+}
+
+const result = getUserNickname("user456")
+  .flatMap(validateNicknameLength)
+
+console.log("Validated Nickname:", result.safeUnwrap())
+```
+
+---
+
+## Why `flatMap` is Powerful
+
+Using `flatMap` makes your code:
+
+- More **composable**: chain as many steps as you like
+- More **declarative**: define what happens, not how
+- More **robust**: no chance of missing an error or null case
+- More **readable**: each transformation step is clearly expressed
+
+---
+
+## Example: Without and With `Result.flatMap()`
+
+<GoodBadCode
+  goodDescription="Using `flatMap()` provides:"
+  goodPoints={[
+    "Automatic flattening of nested Results (Result<Result<T>> becomes Result<T>)",
+    "Seamless chaining of operations that may fail"
+  ]}
+  badDescription="Manual nested Result handling causes:"
+  badPoints={[
+    "Verbose unwrapping/rewrapping of intermediate Results",
+    "Pyramid of nested conditions for sequential operations"
+  ]}
+  goodCode={`import { Result } from "@carbonteq/fp";
+
+async function processUser(userId: string) {
+  return Result.Ok(userId)
+    .flatMap(fetchUser) // Returns Result<User>
+    .flatMap(validateUser); // Returns Result<ValidUser>
+}`}
+  badCode={`import { Result } from "@carbonteq/fp";
+
+async function processUser(userId: string) {
+  const user = await fetchUser(userId);
+  if (user.isOk()) {
+    const valid = await validateUser(user.unwrap());
+    return valid; // Manual unwrap/rewrap
+  }
+  return user; // Must propagate error manually
+}`}
+  showViewButton={true}
+/>
+
+---
+
+## Exercise: Refactor Using `flatMap()`
+
+Here’s a function written in an imperative way using `map` and conditionals. Can you rewrite it using `flatMap()`?
+
+Your goal is to replace conditional checks with a functional `flatMap` chain.
+
+```ts
+import { Result } from "@carbonteq/fp";
+
+async function checkUserAge(age: string): Promise<Result<number, Error>> {
+  try {
+    const parsed = Result.Ok(age).map((str) => parseInt(str, 10));
+
+    if (parsed.isOk()) {
+      const value = parsed.safeUnwrap()!;
+      if (value > 18) {
+        return Result.Ok(value);
+      } else {
+        return Result.Err(new Error("Too young"));
+      }
+    } else {
+      return parsed;
+    }
+  } catch {
+    return Result.Err(new Error("Unexpected error"));
+  }
+}
+```
+
+Your goal is to replace conditional checks with a functional `flatMap` chain.
+
+<SandPack
+  code={`import { Result } from "@carbonteq/fp";
+
+async function checkUserAge(age: string): Promise<Result<number, Error>> {
+  try {
+    const parsed = Result.Ok(age).map((str) => parseInt(str, 10));
+
+    if (parsed.isOk()) {
+      const value = parsed.safeUnwrap()!;
+      if (value > 18) {
+        return Result.Ok(value);
+      } else {
+        return Result.Err(new Error("Too young"));
+      }
+    } else {
+      return parsed;
+    }
+  } catch {
+    return Result.Err(new Error("Unexpected error"));
+  }
+}`}
+/>
+
+import { highlight } from "@/components/highlightcode";
+
+import AnswerDialog from "@/components/AnswerDialog"
+
+<AnswerDialog code={`
+import { Result } from "@carbonteq/fp";
+
+async function checkUserAge(age: string): Promise<Result<number, Error>> {
+  return Promise.resolve(Result.Ok(age))
+    .then((res) => res.map((str) => parseInt(str, 10)))
+    .then((res) =>
+      res.flatMap((value) =>
+        value > 18
+          ? Result.Ok(value)
+          : Result.Err(new Error("Too young"))
+      )
+    );
+}
+`} />
+
+
+
+
+---
+
+Whether you’re working with `Result` or `Option`, `flatMap` gives you the flexibility to chain complex logic while maintaining safety and composability.

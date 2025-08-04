@@ -1,0 +1,89 @@
+---
+title: .toPromise()
+description: Convert Result or Option types to resolved Promises while preserving their context
+---
+
+## Promise Conversion for Async Values
+
+The `.toPromise()` method provides seamless integration between Carbonteq FP's `Result`/`Option` types and JavaScript's native Promise system. It handles the common case where you need to work with asynchronous operations while maintaining functional error handling.
+
+---
+
+## For Result Types
+
+### What It Does
+Converts a `Result<Promise<T>, E>` into a `Promise<Result<T, E>>`, resolving the inner Promise while preserving the Result context.
+
+Key behaviors:
+- Resolves the inner Promise if the Result is `Ok`
+- Preserves any existing `Err` value without modification
+- Maintains type safety throughout the conversion
+
+### When to Use
+- When working with mixed asynchronous operations
+- When you need to await a Promise inside a Result pipeline
+- When integrating with existing Promise-based APIs
+
+```ts
+import { Result, matchRes } from "@carbonteq/fp";
+
+
+function fetchUserFromApi(): Result<Promise<string>, string> {
+ return Result.Ok(
+   new Promise((resolve) => setTimeout(() => resolve("User Data"), 1000))
+ );
+}
+async function main() {
+ const asyncResult = fetchUserFromApi();
+ const finalResult = await asyncResult.toPromise();
+ matchRes(finalResult, {
+   Ok(data) {
+     console.log("API Success:", data);
+   },
+   Err(error) {
+     console.error("API Failed:", error);
+   },
+ });
+}
+main();
+```
+
+---
+
+## For Option Types
+
+### What It Does
+Converts an `Option<Promise<T>>` into a `Promise<Option<T>>`, resolving the inner Promise while preserving the Option context.
+
+Key behaviors:
+- Resolves the inner Promise if the Option is `Some`
+- Preserves `None` values without modification
+- Maintains the Option wrapper throughout async resolution
+
+### When to Use
+- When dealing with potentially missing async values
+- When chaining optional async operations
+- When working with conditional Promise-based APIs
+
+```ts
+import { Option } from "@carbonteq/fp";
+async function loadUserSettings(userId: string): Promise<Option<{ theme: string }>> {
+ if (userId === "123") {
+   return Option.Some({ theme: "dark" });
+ }
+ return Option.None;
+}
+async function main() {
+ const settingsOpt = Option.fromPromise(loadUserSettings("123"));
+ const finalSettings = await settingsOpt.toPromise();
+
+
+ finalSettings.isSome()
+   ? console.log(`User theme: ${finalSettings.unwrap().theme}`)
+   : console.log("No settings found for user.");
+}
+main();
+```
+
+---
+

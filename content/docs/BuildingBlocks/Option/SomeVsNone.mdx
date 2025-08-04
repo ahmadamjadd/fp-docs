@@ -1,0 +1,55 @@
+---
+title: Some vs None
+description: Understand the two possible states of the Option type.
+---
+
+# Some vs None
+
+At the heart of the `Option<T>` type are its two possible states: `Some` and `None`. These represent a value being *present* or *absent*, and they form the foundation for how `Option` helps us avoid undefined behavior and null reference errors.
+
+## `Some`: When a Value Exists
+
+When we wrap a value in `Some`, we're saying, "Yes, this value exists, and it's safe to use." This makes our intent clear to both TypeScript and fellow developers: we are explicitly acknowledging the presence of a valid value.
+
+In Carbonteq FP, this looks and feels natural. When a function might return a valid result, we use `Some(value)` to capture that presence.
+
+```ts
+import { Option, some } from "carbonteq-fp"
+
+function getUserName(id: number): Option<string> {
+  const user = { id: 1, name: "Ahmad" }
+  return id === user.id ? some(user.name) : some("Guest")
+}
+```
+
+
+## `None`: When There's Nothing
+
+`None` is used when a value is absent. Unlike `null` or `undefined`, which are often used inconsistently or forgotten entirely, `None` is deliberate. It's a signal that we *thought about* the possibility of absence and handled it intentionally.
+
+This clarity leads to safer, more predictable code. Instead of throwing errors when something’s missing, we can explicitly match and handle the `None` case.
+
+```ts
+import { Option, none } from "carbonteq-fp"
+
+function findProduct(id: number): Option<string> {
+  const products: Record<number, string> = {
+    1: "Laptop",
+    2: "Monitor",
+  }
+
+  return products[id] ? some(products[id]) : none()
+}
+```
+
+
+## Why This Matters
+
+Using `Some` and `None` makes it easier to reason about your code. Every time you see an `Option`, you know you're dealing with a value that might not be there, and you're encouraged (or required) to handle both scenarios.
+
+This practice leads to:
+
+- Fewer runtime crashes due to unexpected `undefined` values
+- Cleaner and more expressive function signatures
+- A smoother developer experience, especially when collaborating in teams
+
