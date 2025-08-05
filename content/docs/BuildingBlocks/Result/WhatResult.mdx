@@ -3,16 +3,12 @@ title: What is Result?
 description: Learn how the Result type provides explicit, type-safe error handling in functional programming.
 ---
 
-# What is `Result`?
-
-In robust software design, we need clear ways to handle operations that may fail. The `Result` type gives us structured error handling that keeps failures visible and manageable. Unlike exception-based approaches that hide error paths, `Result` makes success and failure cases equally explicit in your code's type signatures.
-
+The Result type in solves error handling in JavaScript and TypeScript by introducing explicit, functional, and composable mechanisms for managing success and failure. This eliminates the ambiguity and fragility of traditional try/catch.
 ## Why Result Matters
 
 `Result` addresses error-handling by making errors first-class citizens. When you see `Result`, you immediately understand:
 - The operation may fail
-- The exact error type is specified
-- Both outcomes must be handled
+- Both outcomes (success and failure) must be handled
 
 ## Understanding Result
 
@@ -40,17 +36,15 @@ function divide(a: number, b: number): Result<number, string> {
 
 ## Key Benefits
 
-### Type-Safe Error Handling
+### No forgotten Error Handling
 Compiler-enforced handling of both success and failure paths means no forgotten error cases.
 
-### Maintained Error Context
-Errors propagate through your pipeline without losing valuable debugging information.
 
 ### Composable Operations
 Chain transformations cleanly using:
 - `map` for value transformations
 - `flatMap` for operation sequencing
-- `match` for exhaustive case handling
+- `matchRes` for exhaustive case handling
 
 ```ts
 // Using match for exhaustive handling
@@ -66,10 +60,9 @@ const value = divide(10, 2).unwrapOr(0);
 ## Ideal Use Cases
 
 `Result` shines when:
-- Dealing with predictable failure modes (API calls, IO operations)
+- Dealing with predictable failure modes
 - Building complex operation pipelines
 - Writing critical code where all failures must be handled
-- Working in functional-style codebases
 
 ```ts
 // Chaining operations
@@ -98,10 +91,7 @@ async function fetchData(): Promise<Result<Data, Error>> {
   ]}
   badDescription="Exception Pitfalls:"
   badPoints={[
-    "Invisible error paths in types",
-    "Lost stack traces and context",
-    "Optional catch blocks",
-    "Unpredictable control flow"
+    "Might forget any error"
   ]}
   goodCode={`// With Result
 function getUser(): Result<User, APIError> {

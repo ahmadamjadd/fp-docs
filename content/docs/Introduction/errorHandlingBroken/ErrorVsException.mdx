@@ -9,15 +9,14 @@ Every program deals with two fundamentally different kinds of failures:
 
 ## Expected Errors
 These are failures we anticipate and design for:
-- Validation failures
-- Network timeouts
-- Permission issues
-- Business rule violations
+- A file is not found
+- An item doesn’t exist in a database
+- A login fails due to wrong credentials
 
 They represent normal program flow and should be:
-- Explicit in type signatures
-- Documented in APIs
-- Handled deliberately
+- Preventable or recoverable
+- Anticipated during design
+- Handled explicitly using types like `Result`, `Option`
 
 ```ts
 // Expected failure - API response
@@ -41,28 +40,22 @@ fetchUser("123").match({
 
 ## Unexpected Errors
 These represent genuine system defects:
-- Type coercion failures
-- Assertion violations
-- Critical resource exhaustion
+- Stack overflows
+- Syntax errors in code
+- Misuse of an API
+- Uncaught exceptions in 3rd-party libraries
 
 They indicate:
 - Bugs rather than normal cases
 - Conditions we can't reasonably recover from
 - Problems outside expected behavior
 ```ts
-// Unexpected failure - programming error
-function calculateDiscount(price: number): number {
-  // No type checking - could throw if price is null/undefined
-  return price * 0.15; 
+function recurse() {
+  recurse(); // no base case
 }
 
-// Usage (no compiler enforcement)
-try {
-  calculateDiscount(null); // Throws TypeError
-} catch (e) {
-  // This catch is optional and not type-checked
-  logCrash(e);
-}
+recurse(); // ❌ RangeError: Maximum call stack size exceeded
+
 ```
 
 ## Why the Distinction Matters

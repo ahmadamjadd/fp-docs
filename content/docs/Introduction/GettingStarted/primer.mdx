@@ -4,7 +4,7 @@ description: Learn the basic concepts of Functors and Monads before diving into 
 ---
 Before we explore functional programming in action, let’s take a quick look at two key concepts that show up everywhere in this library: **functors** and **monads**.
 
-Don’t worry — you don’t need a math degree to understand these! We'll explain them in plain English.
+Don’t worry you don’t need a math degree to understand these! We'll explain them in plain English.
 
 ---
 
@@ -16,7 +16,7 @@ Think of it like this:
 
 > _"If I give you a gift-wrapped toy and a set of instructions to decorate it, a functor lets you decorate the toy._
 
-In programming terms, a functor is any structure that supports a transformation operation — often called `map` — allowing you to work with the value inside, while preserving the context.
+In programming terms, a functor is any structure that supports a transformation operation, often called `map`, allowing you to work with the value inside, while preserving the context.
 
 ---
 
@@ -24,7 +24,7 @@ In programming terms, a functor is any structure that supports a transformation 
 
 A **monad** is extension of a functor, but more powerful.
 
-It not only lets you transform values inside a container, but also **chain computations that themselves return containers**. This is often referred to as `flatMap` or `bind`.
+It not only lets you transform values inside a container, but also **chain computations that themselves return containers**. This is often referred to as `flatMap`.
 
 You can think of monads as **pipelines for computation** where each step manages its own context, whether that context is an error, a missing value, or something else.
 

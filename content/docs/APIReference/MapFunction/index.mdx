@@ -52,7 +52,7 @@ async function isAdult(age: string): Promise<Result<string, Error>> {
 
 // Example usage
 const res = await isAdult("11")
-res.match({
+matchRes({
   Ok(value) {
     console.log("Adult:", value)
   },
@@ -109,13 +109,13 @@ In short, `map` helps you **embrace immutability and safety** while writing more
 
 ## Example: Without and With `map`
 
-Below, we’ll see two versions of the same task — one using traditional conditional checks and the other using `map`. You’ll see how much cleaner and declarative the code becomes.
+Below, we’ll see two versions of the same task: one using traditional conditional checks and the other using `map`. You’ll see how much cleaner and declarative the code becomes.
 
 <GoodBadCode
   goodDescription="Using `map()` with Carbonteq's Result type provides:"
   goodPoints={[
     "Declarative value transformation without unwrapping",
-    "Automatic error propagation - no manual `isOk()` checks needed"
+    "Automatic error propagation: no manual `isOk()` checks needed"
   ]}
   badDescription="Manual Result handling without `map()` leads to:"
   badPoints={[

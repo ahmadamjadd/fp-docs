@@ -3,8 +3,6 @@ title: Asynchronous Pipeline
 description: Build a complete async registration flow using Result and .validate.
 ---
 
-# Asynchronous Pipeline
-
 In this section, we’ll explore how to build a fully asynchronous pipeline using the `Result` type, `validate()`, and `flatMap()` with `toPromise()`.
 
 This pattern is especially useful in scenarios like user registration, where each step might involve asynchronous checks, such as checking the availability of an email or sending a verification email.
@@ -13,11 +11,11 @@ This pattern is especially useful in scenarios like user registration, where eac
 
 Imagine you're registering a user. Your pipeline will:
 
-- Validate the user's email format (sync)
-- Check if the email is already registered (async)
-- Validate password strength (sync)
-- Create a new user profile (async)
-- Send a verification email (async)
+- Validate the user's email format
+- Check if the email is already registered
+- Validate password strength 
+- Create a new user profile 
+- Send a verification email 
 
 Each step returns a `Result`, and the full pipeline is composed using functional methods.
 

@@ -21,12 +21,6 @@ The `mapBoth` function operates on Result types by accepting two transformation 
 
 ---
 
-## Practical Applications
-
-In real-world applications, `mapBoth` shines when you need to maintain consistency between success and error paths. For API development, it helps format responses to ensure clients receive similarly structured data regardless of outcome. When working with error reporting, it allows enriching error objects with contextual information while simultaneously processing successful data. The method also proves valuable for logging scenarios where you want to ensure both successes and failures get tagged with consistent metadata. In UI programming, it enables transforming raw data into view models while simultaneously converting technical errors into user-friendly messages, all within the same logical operation.
-
----
-
 ## Example: Without and With `mapBoth`
 
 <GoodBadCode
@@ -59,18 +53,6 @@ if (apiResult.isOk()) {
 }`}
   showViewButton={true}
 />
-
----
-
-## Best Practices
-
-To get the most value from `mapBoth`, keep your transformation functions focused and pure. The two handlers should operate at similar levels of abstraction to maintain code clarity. This method works best for presentation-layer transformations rather than core business logic. When using TypeScript, pay attention to the type relationships between your success and error transformations to ensure type safety throughout your application. The function works particularly well when you need to establish consistent patterns for how your application handles both positive and negative outcomes.
-
----
-
-## Performance Characteristics
-
-The `mapBoth` function adds negligible overhead compared to handling cases separately. The implementation is optimized to create only necessary new objects, with no additional allocations beyond what the transformation functions themselves require. The method is safe to use in performance-sensitive code paths, as it introduces minimal computational cost while providing significant organizational benefits to your codebase.
 
 ---
 

@@ -44,23 +44,22 @@ if (email) {
       {
         title: "With FP",
         lang: "ts",
-        code: `import { Result } from "@carbonteq/fp"
+        code: `import { Result } from "@carbonteq/fp";
 
 async function getUser(id: string): Promise<Result<{ id: string }, Error>> {
-  if (id === "") return Result.Err(new Error("Missing ID"))
-  return Result.Ok({ id })
+  if (id === "") return Result.Err(new Error("Missing ID"));
+  return Result.Ok({ id });
 }
 
 async function fetchProfile(user: { id: string }): Promise<Result<string, Error>> {
-  if (user.id === "x") return Result.Err(new Error("Banned user"))
-  return Result.Ok("Profile for " + user.id)
+  if (user.id === "x") return Result.Err(new Error("Banned user"));
+  return Result.Ok("Profile for " + user.id);
 }
 
 async function loadProfile(id: string): Promise<Result<string, Error>> {
-  return Result.Ok(id)
-    .flatMap(getUser)
-    .flatMap(fetchProfile)
-    .toPromise()
+  return getUser(id) // Start with getUser instead of Result.Ok
+    .flatMap(fetchProfile) // Then chain fetchProfile
+    .toPromise(); // Convert to Promise at the end
 }
 
 
@@ -110,18 +109,34 @@ async function loadProfile(id: string): Promise<{ type: "ok"; value: string } | 
       {
         title: "With FP",
         lang: "ts",
-        code: `import { Result } from "@carbonteq/fp"
+        code: `import { Result } from "@carbonteq/fp";
 
-function validateUser(input: { email?: string; password?: string }): Result<string, Error> {
-  return Result.Ok(input)
-    .flatMap((i) => i.email ? Result.Ok(i.email) : Result.Err(new Error("Missing email")))
-    .flatMap((email) => email.includes("@") ? Result.Ok(email) : Result.Err(new Error("Invalid email")))
-    .flatMap(() =>
-      input.password && input.password.length >= 6
-        ? Result.Ok("Valid user")
-        : Result.Err(new Error("Password too short"))
-    )
+// Individual validation functions
+function validateEmailPresence(input: { email?: string }): Result<string, Error> {
+  return input.email 
+    ? Result.Ok(input.email)
+    : Result.Err(new Error("Missing email"));
 }
+
+function validateEmailFormat(email: string): Result<string, Error> {
+  return email.includes("@") 
+    ? Result.Ok(email)
+    : Result.Err(new Error("Invalid email"));
+}
+
+function validatePassword(input: { password?: string }): Result<string, Error> {
+  return input.password && input.password.length >= 6
+    ? Result.Ok("Valid password")
+    : Result.Err(new Error("Password too short"));
+}
+
+// Composed validation
+function validateUser(input: { email?: string; password?: string }): Result<string, Error> {
+  return validateEmailPresence(input)
+    .flatMap(validateEmailFormat)
+    .flatMap(() => validatePassword(input));
+}
+
 
 
 `,
@@ -129,20 +144,37 @@ function validateUser(input: { email?: string; password?: string }): Result<stri
       {
         title: "Without FP",
         lang: "ts",
-        code: `function validateUser(input: { email?: string; password?: string }): { type: "ok"; value: string } | { type: "err"; error: Error } {
-  if (!input.email) {
-    return { type: "err", error: new Error("Missing email") }
-  }
+        code: `// Individual validation functions
+function validateEmailPresence(input: { email?: string }): { type: "ok"; value: string } | { type: "err"; error: Error } {
+  return input.email 
+    ? { type: "ok", value: input.email }
+    : { type: "err", error: new Error("Missing email") };
+}
 
-  if (!input.email.includes("@")) {
-    return { type: "err", error: new Error("Invalid email") }
-  }
+function validateEmailFormat(email: string): { type: "ok"; value: string } | { type: "err"; error: Error } {
+  return email.includes("@")
+    ? { type: "ok", value: email }
+    : { type: "err", error: new Error("Invalid email") };
+}
 
-  if (!input.password || input.password.length < 6) {
-    return { type: "err", error: new Error("Password too short") }
-  }
+function validatePassword(input: { password?: string }): { type: "ok"; value: string } | { type: "err"; error: Error } {
+  return input.password && input.password.length >= 6
+    ? { type: "ok", value: "Valid password" }
+    : { type: "err", error: new Error("Password too short") };
+}
 
-  return { type: "ok", value: "Valid user" }
+// Composed validation
+function validateUser(input: { email?: string; password?: string }): { type: "ok"; value: string } | { type: "err"; error: Error } {
+  const emailPresenceResult = validateEmailPresence(input);
+  if (emailPresenceResult.type === "err") return emailPresenceResult;
+
+  const emailFormatResult = validateEmailFormat(emailPresenceResult.value);
+  if (emailFormatResult.type === "err") return emailFormatResult;
+
+  const passwordResult = validatePassword(input);
+  if (passwordResult.type === "err") return passwordResult;
+
+  return { type: "ok", value: "Valid user" };
 }`,
       },
     ],
@@ -158,13 +190,31 @@ function validateUser(input: { email?: string; password?: string }): Result<stri
         code: `import { Option, matchOpt } from "@carbonteq/fp";
 
 async function fetchUser(userId: string): Promise<Option<string>> {
-  return userId ? Option.Some("User data") : Option.None;
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return userId 
+    ? Option.Some("User data for " + userId) 
+    : Option.None;
 }
 
-const result = await fetchUser("123");
+async function fetchUserProfile(userId: string): Promise<Option<{name: string, email: string}>> {
+  const userResult = await fetchUser(userId);
+  
+  return matchOpt(userResult, {
+    Some: async (userData) => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      return Option.Some({
+        name: "User " + userId,
+        email: userId + "@example.com"
+      });
+    },
+    None: () => Option.None
+  });
+}
+
+const result = await fetchUserProfile("123");
 matchOpt(result, {
-  Some: (data) => console.log(data),
-  None: () => console.error("User not found"),
+  Some: (profile) => console.log("Profile:", profile),
+  None: () => console.error("User profile not found")
 });
 
 `,
@@ -172,19 +222,39 @@ matchOpt(result, {
       {
         title: "Without FP",
         lang: "ts",
-        code: `function fetchUser(userId: string): Promise<string | null> {
-  return Promise.resolve(userId ? "User data" : null);
+        code: `async function fetchUser(userId: string): Promise<string | null> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return userId ? "User data for " + userId : null;
 }
 
-fetchUser("123")
-  .then((data) => {
-    if (data) {
-      console.log(data);
+async function fetchUserProfile(userId: string): Promise<{name: string, email: string} | null> {
+  try {
+    const userData = await fetchUser(userId);
+    
+    if (!userData) {
+      return null;
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 50));
+    return {
+      name: "User " + userId,
+      email: userId + "@example.com"
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return null;
+  }
+}
+
+fetchUserProfile("123")
+  .then(profile => {
+    if (profile) {
+      console.log("Profile:", profile);
     } else {
-      console.error("User not found");
+      console.error("Profile not found");
     }
   })
-  .catch(() => console.error("Something went wrong"));`,
+  .catch(error => console.error("Failed:", error));`,
       },
     ],
   },

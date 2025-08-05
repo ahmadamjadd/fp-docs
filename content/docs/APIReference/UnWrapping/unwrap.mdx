@@ -30,7 +30,7 @@ res.isOk() ? console.log(res.unwrap()) : console.log(res.unwrapErr());
 
 ## Option.unwrap(): Extract Some or Crash on None
 
-For `Option`, `.unwrap()` works the same way — it gives you the value inside `Some`, but throws an error if the option is `None`. This makes it a risky choice unless you're absolutely sure a value is present.
+For `Option`, `.unwrap()` works the same way: it gives you the value inside `Some`, but throws an error if the option is `None`. This makes it a risky choice unless you're absolutely sure a value is present.
 
 ### Example
 

@@ -3,11 +3,9 @@ title: Success vs Failure
 description: Learn how the Result type clearly models successful and failed operations in a predictable and type-safe way.
 ---
 
-# Success vs Failure
-
 ## The Reality of Failure in Programming
 
-Every operation in software has two possible outcomes: success or failure. Network requests timeout, APIs return unexpected responses, and validation rules get violated. Traditional error handling with exceptions makes these failures unpredictable - they can crash your app from anywhere, at any time, with no warning in your code's structure.
+Every operation in software has two possible outcomes: success or failure. Network requests timeout and validation rules get violated. Traditional error handling with exceptions makes these failures unpredictable: they can crash your app from anywhere, at any time, with no warning in your code's structure.
 
 ## The Problem With Exception-Based Handling
 
@@ -30,10 +28,8 @@ Functional programming offers a radical alternative: represent failures as data.
 - `Failure(error)` - A container for error details
 
 This approach gives us:
-- **Visible failure states** in type signatures
-- **Forced error handling** at compile time
+- **Visible failure states** 
 - **Preserved error context** through pipelines
-- **Predictable control flow** without surprises
 
 ## Why Explicit Failure Matters
 
@@ -42,8 +38,5 @@ Building robust software requires treating errors as expected outcomes, not emer
 1. **Making failures impossible to ignore**  
    The type system ensures handling before use
 
-2. **Documenting possible errors**  
-   Function signatures serve as error documentation
-
-3. **Enabling safer composition**  
+2. **Enabling safer composition**  
    Operations chain cleanly with built-in error propagation

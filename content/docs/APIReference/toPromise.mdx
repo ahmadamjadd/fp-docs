@@ -17,7 +17,6 @@ Converts a `Result<Promise<T>, E>` into a `Promise<Result<T, E>>`, resolving the
 Key behaviors:
 - Resolves the inner Promise if the Result is `Ok`
 - Preserves any existing `Err` value without modification
-- Maintains type safety throughout the conversion
 
 ### When to Use
 - When working with mixed asynchronous operations

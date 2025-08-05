@@ -3,7 +3,7 @@ title: .innerMap()
 description: Transform array elements inside Result or Option containers
 ---
 
-## .innerMap(): Array Element Transformation
+## Array Element Transformation
 
 The `.innerMap()` method provides specialized array transformation capabilities for `Result` and `Option` types containing arrays, allowing element-wise operations while preserving the container context.
 
@@ -53,16 +53,7 @@ console.log(discountedPrices.safeUnwrap());
 ### Key Features:
 - Preserves Option context (Some/None state)
 - No effect on non-array values
-- Maintains functional purity
 - Composes with other Option methods
-
----
-
-## When to Use
-- Processing arrays of data in functional pipelines
-- Transforming collection data
-- Maintaining context in data processing chains
-- Batch operations on contained collections
 
 ---
 

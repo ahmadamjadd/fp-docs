@@ -57,7 +57,7 @@ async function isAdult(age: string): Promise<Result<number, Error>> {
 
 const res = await isAdult("12")
 
-res.match({
+matchRes({
   Ok(age) {
     console.log("Allowed! Age:", age)
   },
